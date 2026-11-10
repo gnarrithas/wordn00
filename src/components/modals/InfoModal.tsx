@@ -136,8 +136,7 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                       out: it cycles through red, yellow, green and back to
                       blank. Red, yellow and blank apply to the letter
                       everywhere on the board and keyboard; green only to that
-                      spot.{" "}
-                      <strong>Clear</strong> removes every mark.
+                      spot. <strong>Clear</strong> removes every mark.
                     </Example>
 
                     <p>
