@@ -134,8 +134,9 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                     >
                       Tap a letter on the board to note what you have worked
                       out: it cycles through red, yellow, green and back to
-                      blank. Red and yellow colour the letter everywhere on the
-                      board and keyboard; green only colours it in that spot.{" "}
+                      blank. Red, yellow and blank apply to the letter
+                      everywhere on the board and keyboard; green only to that
+                      spot.{" "}
                       <strong>Clear</strong> removes every mark.
                     </Example>
 

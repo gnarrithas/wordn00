@@ -36,11 +36,9 @@ test("green marks one spot only, leaving the other copies yellow", () => {
   expect(getMark(marks, "C", 0)).toBe("correct");
   expect(getMark(marks, "C", 2)).toBe("correct");
   expect(getMark(marks, "C", 1)).toBe("present");
-  // Back to blank: that spot, and the plain copies; the other green stays.
-  marks = cycleMark(marks, "C", 0);
-  expect(getMark(marks, "C", 0)).toBeUndefined();
-  expect(getMark(marks, "C", 1)).toBeUndefined();
-  expect(getMark(marks, "C", 2)).toBe("correct");
+  // Back to blank clears the letter everywhere, other green spots too.
+  marks = cycleMark({ ...marks, D: "absent" }, "C", 0);
+  expect(marks).toEqual({ D: "absent" });
 });
 
 test("cycleMark leaves other letters alone", () => {

@@ -16,8 +16,8 @@ coloured tiles), stretched like Wordler: the hidden word can be anywhere from
 - **More tries for long words.** You get 2 × (length − 1) tries, but at
   least 8. The board grows a row at a time.
 - **Your own notes.** Tap a guessed letter to cycle its mark (red, yellow,
-  green, blank). Red and yellow colour that letter everywhere on the board
-  and keyboard; green only colours it in that spot, in every row.
+  green, blank). Red, yellow and blank apply to that letter everywhere on the
+  board and keyboard; green only to that spot, in every row.
   **Clear** removes them all; the ↶ and ↷ keys (or Ctrl/⌘+Z and
   Ctrl/⌘+Shift+Z) undo and redo mark changes. Letters of a guess scored all
   red are marked red automatically, and stay so.

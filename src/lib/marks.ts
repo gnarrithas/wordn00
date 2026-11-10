@@ -51,8 +51,8 @@ const without = (marks: Marks, ...keys: string[]): Marks => {
 
 // Tapping `letter` at `position` moves that tile to its next colour: red and
 // yellow change every copy of the letter; green only this spot, the others
-// staying yellow. From green the tile goes back to blank, and so do the
-// letter's copies that are not green elsewhere.
+// staying yellow. From green, the letter goes back to blank everywhere,
+// green spots included.
 export const cycleMark = (
   marks: Marks,
   letter: string,
@@ -67,7 +67,10 @@ export const cycleMark = (
     };
   }
   if (next === undefined) {
-    return without(marks, letter, greenKey(letter, position));
+    return without(
+      marks,
+      ...Object.keys(marks).filter((key) => key[0] === letter),
+    );
   }
   return { ...marks, [letter]: next };
 };
