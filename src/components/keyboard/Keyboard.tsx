@@ -46,6 +46,28 @@ const NAVIGATION_KEYS = new Set([
   "ArrowRight",
 ]);
 
+// Half a key of empty space, as in Word500's layout, so rows two and three
+// sit indented under the top row.
+const Gap = () => (
+  <div aria-hidden="true" className="flex-[0.5] max-w-[23px] m-0.5" />
+);
+
+// A U-turn arrow pointing left (undo); mirrored, it is redo.
+const UndoArrow = ({ className = "" }: { className?: string }) => (
+  <svg
+    aria-hidden="true"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth={2.5}
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={`w-5 h-5 ${className}`}
+  >
+    <path d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+  </svg>
+);
+
 export const Keyboard = ({
   onChar,
   onDelete,
@@ -248,20 +270,27 @@ export const Keyboard = ({
         {[..."QWERTYUIOP"].map(letterKey)}
       </div>
       <div className="flex justify-center">
+        <Gap />
         {[..."ASDFGHJKL"].map(letterKey)}
+        <Gap />
       </div>
       <div className="flex justify-center">
-        <Key isWide value="ENTER" onClick={onClick}>
-          Enter
-        </Key>
+        <Gap />
         {[..."ZXCVBNM"].map(letterKey)}
         <Key isWide value="DELETE" onClick={onClick}>
           Delete
         </Key>
+        <Gap />
       </div>
       <div className="flex justify-center">
-        <Key isWide value="UNDO" onClick={onClick} isDisabled={!canUndo}>
-          Undo
+        <Key value="UNDO" onClick={onClick} isDisabled={!canUndo}>
+          <UndoArrow />
+        </Key>
+        <Key value="REDO" onClick={onClick} isDisabled={!canRedo}>
+          <UndoArrow className="-scale-x-100" />
+        </Key>
+        <Key isWide value="CLEAR" onClick={onClick}>
+          Clear
         </Key>
         <Key isWide value="HINT" onClick={onClick}>
           Hint
@@ -269,11 +298,8 @@ export const Keyboard = ({
         <Key isSpace value="SPACE" onClick={onClick}>
           SPACE
         </Key>
-        <Key isWide value="CLEAR" onClick={onClick}>
-          Clear
-        </Key>
-        <Key isWide value="REDO" onClick={onClick} isDisabled={!canRedo}>
-          Redo
+        <Key isWide value="ENTER" onClick={onClick}>
+          Enter
         </Key>
       </div>
     </div>

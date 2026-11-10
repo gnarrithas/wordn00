@@ -17,7 +17,9 @@ coloured tiles), stretched like Wordler: the hidden word can be anywhere from
   least 8. The board grows a row at a time.
 - **Your own notes.** Tap a guessed letter to cycle its mark (red, yellow,
   green, blank); marks colour that letter on the board and keyboard.
-  **Clear** removes them all.
+  **Clear** removes them all; the ↶ and ↷ keys (or Ctrl/⌘+Z and
+  Ctrl/⌘+Shift+Z) undo and redo mark changes. Letters of a guess scored all
+  red are marked red automatically, and stay so.
 - **Keyboard extras.** **Space** (or `-`) types a blank to fill in later;
   **Hint** types a word that fits every score so far.
 - **Hard mode.** Every guess must fit the scores of the guesses before it.
