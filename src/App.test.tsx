@@ -845,12 +845,7 @@ test("Undo and Redo step through mark changes, keys and shortcuts", async () => 
   });
   expect(tile()).toHaveAccessibleName("C, marked present");
   act(() => {
-    fireEvent.keyDown(window, {
-      key: "Z",
-      code: "KeyZ",
-      metaKey: true,
-      shiftKey: true,
-    });
+    fireEvent.keyDown(window, { key: "y", code: "KeyY", ctrlKey: true });
   });
   expect(tile()).toHaveAccessibleName("C");
   // The shortcut types nothing.

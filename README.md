@@ -18,8 +18,9 @@ coloured tiles), stretched like Wordler: the hidden word can be anywhere from
 - **Your own notes.** Tap a guessed letter to cycle its mark (red, yellow,
   green, blank). Red, yellow and blank apply to that letter everywhere on the
   board and keyboard; green only to that spot, in every row.
-  **Clear** removes them all; the ↶ and ↷ keys (or Ctrl/⌘+Z and
-  Ctrl/⌘+Shift+Z) undo and redo mark changes. Letters of a guess scored all
+  **Clear** removes them all; the ↶ and ↷ keys undo and redo mark changes,
+  as do ⌘Z and ⇧⌘Z on Apple devices and Ctrl+Z and Ctrl+Y (or
+  Ctrl+Shift+Z) elsewhere. Letters of a guess scored all
   red are marked red automatically, and stay so.
 - **Keyboard extras.** **Space** (or `-`) types a blank to fill in later;
   **Hint** types a word that fits every score so far.

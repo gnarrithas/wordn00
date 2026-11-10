@@ -1,6 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PLACEHOLDER } from "../../constants/settings";
-import { KeyValue } from "../../lib/keyboard";
+import {
+  getUndoShortcut,
+  getUndoShortcutLabels,
+  isApplePlatform,
+  KeyValue,
+} from "../../lib/keyboard";
 import { getKeyMark, Marks } from "../../lib/marks";
 import { Key } from "./Key";
 
@@ -108,6 +113,9 @@ export const Keyboard = ({
     return onChar(value);
   };
 
+  // Cmd or Ctrl shortcuts; the platform does not change while the page is open.
+  const [isApple] = useState(isApplePlatform);
+
   // The window listener is attached once and always calls the latest props.
   const latestRef = useRef({
     onChar,
@@ -202,16 +210,13 @@ export const Keyboard = ({
       ) {
         return;
       }
-      // Undo: Ctrl/Cmd+Z. Redo: Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y.
-      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
-        const key = e.key.toLowerCase();
-        if (key === "z" || key === "y") {
-          e.preventDefault();
-          if (key === "z" && !e.shiftKey) {
-            latest.onUndo();
-          } else {
-            latest.onRedo();
-          }
+      const shortcut = getUndoShortcut(e, isApple);
+      if (shortcut) {
+        e.preventDefault();
+        if (shortcut === "undo") {
+          latest.onUndo();
+        } else {
+          latest.onRedo();
         }
         return;
       }
@@ -253,6 +258,8 @@ export const Keyboard = ({
     };
   }, []);
 
+  const shortcuts = getUndoShortcutLabels(isApple);
+
   const letterKey = (letter: string) => (
     <Key
       key={letter}
@@ -283,10 +290,20 @@ export const Keyboard = ({
         <Gap />
       </div>
       <div className="flex justify-center">
-        <Key value="UNDO" onClick={onClick} isDisabled={!canUndo}>
+        <Key
+          value="UNDO"
+          onClick={onClick}
+          isDisabled={!canUndo}
+          title={`Undo (${shortcuts.undo})`}
+        >
           <UndoArrow />
         </Key>
-        <Key value="REDO" onClick={onClick} isDisabled={!canRedo}>
+        <Key
+          value="REDO"
+          onClick={onClick}
+          isDisabled={!canRedo}
+          title={`Redo (${shortcuts.redo})`}
+        >
           <UndoArrow className="-scale-x-100" />
         </Key>
         <Key isWide value="CLEAR" onClick={onClick}>

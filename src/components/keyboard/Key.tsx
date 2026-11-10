@@ -25,6 +25,8 @@ type Props = {
   isUsed?: boolean;
   // Greyed out and inert, e.g. Undo with nothing to undo.
   isDisabled?: boolean;
+  // Tooltip, e.g. the key's keyboard shortcut.
+  title?: string;
   onClick: (value: KeyValue) => void;
 };
 
@@ -35,6 +37,7 @@ export const Key = ({
   isSpace = false,
   isUsed = false,
   isDisabled = false,
+  title,
   value,
   onClick,
 }: Props) => {
@@ -66,6 +69,7 @@ export const Key = ({
     <button
       type="button"
       aria-label={label}
+      title={title}
       className={classes}
       disabled={isDisabled}
       onClick={() => onClick(value)}
