@@ -1,4 +1,4 @@
-import { EXTRA_GUESSES, MIN_GUESSES } from "../constants/settings";
+import { MIN_GUESSES } from "../constants/settings";
 
 const MS_IN_DAY = 86400000;
 // Day 0 of the daily sequence: 9 November 2026 (months count from 0). Must
@@ -105,10 +105,9 @@ export const getSolutionLengthRange = () => {
   return { shortest, longest };
 };
 
-// Long words get a few guesses more than their length; shorter words get a
-// floor.
+// Twice one less than the word's length; shorter words get a floor.
 export const getMaxGuesses = (solution: string) =>
-  Math.max(MIN_GUESSES, solution.length + EXTRA_GUESSES);
+  Math.max(MIN_GUESSES, 2 * (solution.length - 1));
 
 export const isWordInWordList = (word: string) => {
   const { solutionSet, guessSet } = getLists();

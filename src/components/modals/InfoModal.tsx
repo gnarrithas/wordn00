@@ -93,8 +93,8 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                       {MAX_WORD_LENGTH}.
                     </p>
                     <p>
-                      You get three more tries than the word has letters, but at
-                      least {MIN_GUESSES}.
+                      You get twice as many tries as the word has letters, minus
+                      two, but at least {MIN_GUESSES}.
                     </p>
                     <p>
                       Each guess gets three numbers, shown before it: letters in

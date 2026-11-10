@@ -2,6 +2,7 @@ import { readFileSync } from "fs";
 import { join } from "path";
 import {
   getDayIndex,
+  getMaxGuesses,
   getSolutionLengthRange,
   getWordOfDay,
   isWordInWordList,
@@ -132,4 +133,11 @@ test("lookups are case-insensitive and cover both lists", () => {
 
 test("the length range comes from the solutions", () => {
   expect(getSolutionLengthRange()).toEqual({ shortest: 3, longest: 18 });
+});
+
+test("max guesses are 2 × (length - 1), at least 8", () => {
+  expect(getMaxGuesses("CAT")).toBe(8);
+  expect(getMaxGuesses("CRANE")).toBe(8);
+  expect(getMaxGuesses("PLANETS")).toBe(12);
+  expect(getMaxGuesses("ABBREVIATION")).toBe(22);
 });

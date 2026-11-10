@@ -13,8 +13,8 @@ coloured tiles), stretched like Wordler: the hidden word can be anywhere from
 - **Secret length.** Guesses can be 3–20 letters and must be in the word list.
   Spots count from the left of the hidden word, so an all-green short guess
   may just be a prefix.
-- **More tries for long words.** You get 8 tries, or three more than the
-  word's length if that is larger. The board grows a row at a time.
+- **More tries for long words.** You get 2 × (length − 1) tries, but at
+  least 8. The board grows a row at a time.
 - **Your own notes.** Tap a guessed letter to cycle its mark (red, yellow,
   green, blank); marks colour that letter on the board and keyboard.
 - **Hard mode.** Every guess must fit the scores of the guesses before it.
