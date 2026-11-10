@@ -11,7 +11,10 @@ const TILES = [
 ];
 
 export const Logo = () => (
-  <h1 className="flex grow min-w-0 items-center gap-2" aria-label="Wordn00">
+  <h1
+    className="flex grow min-w-0 items-center gap-2 cursor-default select-none"
+    aria-label="Wordn00"
+  >
     <div
       aria-hidden="true"
       className="grid grid-cols-2 shrink-0 w-8 h-8 border border-black"

@@ -115,8 +115,9 @@ export const Grid = ({
         tabIndex={0}
         role="region"
         aria-label="Board"
-        // Top padding keeps the first row clear of the header.
-        className="board-scroll relative min-h-0 overflow-auto pt-6"
+        // Top padding keeps the first row clear of the header. Tiles are not
+        // text: no selection and no text cursor, only tappable ones point.
+        className="board-scroll relative min-h-0 overflow-auto pt-6 cursor-default select-none"
       >
         {/* px-1 leaves room for the Reveal Length outline around a row. */}
         <div ref={rowsRef} data-testid="board" className="w-max mx-auto px-1">
