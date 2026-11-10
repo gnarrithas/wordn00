@@ -29,14 +29,16 @@ import {
   SavedGame,
   saveGame,
 } from "./lib/storage";
-import { findHardModeViolation } from "./lib/hardMode";
 import {
   applyHighContrast,
+  loadLevel,
   loadSettings,
+  saveLevel,
   saveSetting,
   SettingKey,
   Settings,
 } from "./lib/settings";
+import { Level } from "./lib/levels";
 import { trackEvent } from "./lib/analytics";
 import {
   GameTimer,
@@ -93,31 +95,32 @@ type GameOutcome = "won" | "lost" | "skipped";
 // The game to resume. An unfinished (or unstarted) daily word comes first, and
 // a new day or a redeploy that moved today's word starts the day's word
 // afresh; any saved New word game is then dropped. Once today's word is
-// finished, a New word game in progress carries on.
-const loadRestorableGame = (): SavedGame | null => {
-  const saved = loadDailyGame();
+// finished, a New word game in progress carries on. Each level has its own.
+const loadRestorableGame = (level: Level): SavedGame | null => {
+  const saved = loadDailyGame(level);
   const daily =
     saved &&
-    isSolution(saved.solution) &&
+    isSolution(saved.solution, level) &&
     saved.day === getDayIndex() &&
-    saved.solution === getWordOfDay(saved.day)
+    saved.solution === getWordOfDay(level, saved.day)
       ? saved
       : null;
-  const practice = loadPracticeGame();
+  const practice = loadPracticeGame(level);
   if (
     daily &&
     (daily.isGameWon || daily.isAnswerRevealed) &&
     practice &&
-    isSolution(practice.solution)
+    isSolution(practice.solution, level)
   ) {
     return practice;
   }
-  clearPracticeGame();
+  clearPracticeGame(level);
   return daily;
 };
 
 function Game() {
-  const [initialGame] = useState(loadRestorableGame);
+  const [level, setLevel] = useState(loadLevel);
+  const [initialGame] = useState(() => loadRestorableGame(level));
   const isRestoredGameOver = Boolean(
     initialGame && (initialGame.isGameWon || initialGame.isAnswerRevealed),
   );
@@ -126,7 +129,7 @@ function Game() {
     initialGame ? initialGame.day : getDayIndex(),
   );
   const [solution, setSolution] = useState(
-    () => initialGame?.solution ?? getWordOfDay(day ?? 0),
+    () => initialGame?.solution ?? getWordOfDay(level, day ?? 0),
   );
   const [guesses, setGuesses] = useState<string[]>(
     () => initialGame?.guesses ?? [],
@@ -199,8 +202,11 @@ function Game() {
   }, []);
 
   useEffect(() => {
-    saveGame({ solution, guesses, isGameWon, isAnswerRevealed, day, marks });
-  }, [solution, guesses, isGameWon, isAnswerRevealed, day, marks]);
+    saveGame(
+      { solution, guesses, isGameWon, isAnswerRevealed, day, marks },
+      level,
+    );
+  }, [solution, guesses, isGameWon, isAnswerRevealed, day, marks, level]);
 
   useEffect(
     () => () => {
@@ -254,6 +260,7 @@ function Game() {
       outcome,
       guesses: guessCount,
       length: solution.length,
+      level,
       maxGuesses,
       seconds: Math.round(activeMs / 1000),
       word: solution,
@@ -373,18 +380,11 @@ function Game() {
       return showToast("Word not found", ERROR_TOAST_MS);
     }
 
-    if (settings.hardMode) {
-      const violation = findHardModeViolation(currentGuess, guesses, solution);
-      if (violation) {
-        return showToast(violation, ERROR_TOAST_MS);
-      }
-    }
-
     const guess = currentGuess;
     setCurrentGuess("");
     setGuesses((prev) => [...prev, guess]);
     if (guesses.length === 0) {
-      trackEvent("game_start", { length: solution.length });
+      trackEvent("game_start", { length: solution.length, level });
     }
 
     if (guess === solution) {
@@ -431,7 +431,7 @@ function Game() {
       return showToast("Make a guess first", ERROR_TOAST_MS);
     }
     notePlayerAction();
-    const hint = findHint(guesses, solution, getSolutions());
+    const hint = findHint(guesses, solution, getSolutions(level));
     if (hint) {
       setCurrentGuess(hint);
     }
@@ -466,13 +466,6 @@ function Game() {
   };
 
   const onSettingChange = (key: SettingKey, value: boolean) => {
-    // As in Wordle, hard mode cannot be switched on partway through a round.
-    if (key === "hardMode" && value && guesses.length > 0 && !isGameOver) {
-      return showToast(
-        "Hard mode can only be enabled at the start of a round",
-        ERROR_TOAST_MS,
-      );
-    }
     if (key === "highContrast") {
       applyHighContrast(value);
     }
@@ -486,7 +479,7 @@ function Game() {
     if (!isGameOver && guesses.length > 0) {
       trackGameEnd("skipped", guesses.length);
     }
-    const nextSolution = getRandomWord(solution);
+    const nextSolution = getRandomWord(solution, level);
     gameTimerRef.current = startTimer(Date.now());
     saveActiveMs(nextSolution, 0);
     skipEndToastRef.current = false;
@@ -503,6 +496,40 @@ function Game() {
     setIsAnswerRevealed(false);
   };
 
+  // Each level keeps its own game: switching resumes that level's game as a
+  // reload would, or starts its daily word.
+  const onLevelChange = (next: Level) => {
+    if (next === level) {
+      return;
+    }
+    saveLevel(next);
+    const game = loadRestorableGame(next);
+    const nextDay = game ? game.day : getDayIndex();
+    const nextSolution = game?.solution ?? getWordOfDay(next, nextDay ?? 0);
+    const isOver = Boolean(game && (game.isGameWon || game.isAnswerRevealed));
+    gameTimerRef.current = startTimer(
+      Date.now(),
+      game && !isOver ? loadActiveMs(nextSolution) : 0,
+    );
+    skipEndToastRef.current = isOver;
+    hideToast();
+    window.clearTimeout(shareTimerRef.current);
+    window.clearTimeout(lengthToastTimerRef.current);
+    setShareLabel("Share");
+    setLevel(next);
+    setSolution(nextSolution);
+    setDay(nextDay);
+    setGuesses(game?.guesses ?? []);
+    // Restored rows show their scores at once, without the reveal.
+    setRevealedCount(game?.guesses.length ?? 0);
+    setMarksHistory(startHistory(game?.marks ?? {}));
+    setCurrentGuess("");
+    setIsGameWon(game?.isGameWon ?? false);
+    setIsAnswerRevealed(game?.isAnswerRevealed ?? false);
+    setRevealedAnswer(game?.isAnswerRevealed ? nextSolution : "");
+    setBoardPhase(isOver ? "revealed" : "marks");
+  };
+
   const onToggleTheme = () => {
     const next = theme === "dark" ? "light" : "dark";
     setTheme(next);
@@ -510,9 +537,10 @@ function Game() {
   };
 
   const onShare = async () => {
-    trackEvent("share", { won: isGameWon, length: solution.length });
+    trackEvent("share", { won: isGameWon, length: solution.length, level });
     const text = getShareText(
       day,
+      level,
       guesses,
       solution,
       settings.highContrast,
@@ -625,6 +653,8 @@ function Game() {
         handleClose={() => setIsSettingsModalOpen(false)}
         settings={settings}
         onSettingChange={onSettingChange}
+        level={level}
+        onLevelChange={onLevelChange}
         theme={theme}
         onToggleTheme={onToggleTheme}
       />

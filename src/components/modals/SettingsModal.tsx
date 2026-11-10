@@ -1,6 +1,7 @@
 import { Fragment, ReactNode } from "react";
-import { Dialog, Switch, Transition } from "@headlessui/react";
+import { Dialog, RadioGroup, Switch, Transition } from "@headlessui/react";
 import { XIcon } from "@heroicons/react/outline";
+import { Level, LEVELS } from "../../lib/levels";
 import { SettingKey, Settings } from "../../lib/settings";
 import { Theme } from "../../lib/theme";
 
@@ -9,6 +10,8 @@ type Props = {
   handleClose: () => void;
   settings: Settings;
   onSettingChange: (key: SettingKey, value: boolean) => void;
+  level: Level;
+  onLevelChange: (level: Level) => void;
   theme: Theme;
   onToggleTheme: () => void;
 };
@@ -52,11 +55,57 @@ const Toggle = ({ label, description, checked, onChange }: ToggleProps) => (
   </Switch.Group>
 );
 
+type LevelPickerProps = {
+  level: Level;
+  onChange: (level: Level) => void;
+};
+
+// The old site's levels, each with its rules. Each level keeps its own game.
+const LevelPicker = ({ level, onChange }: LevelPickerProps) => (
+  <RadioGroup value={level} onChange={onChange} className="py-3">
+    <RadioGroup.Label className="text-sm font-semibold text-ui-text">
+      Level
+    </RadioGroup.Label>
+    <p className="text-xs font-normal text-ui-muted">
+      Limits which words can be the answer; any word can be guessed
+    </p>
+    <div className="mt-2 grid grid-cols-3 gap-2">
+      {LEVELS.map(({ level: value, name, rules }) => (
+        <RadioGroup.Option
+          key={value}
+          value={value}
+          className={({ checked }) =>
+            `${
+              checked
+                ? "border-wordle-correct dark:border-wordle-night-correct bg-ui-tile"
+                : "border-ui-border"
+            } cursor-pointer rounded-tile border-2 px-2 py-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent`
+          }
+        >
+          <RadioGroup.Label className="block text-sm font-bold text-ui-text">
+            {name}
+          </RadioGroup.Label>
+          <RadioGroup.Description
+            as="ul"
+            className="mt-0.5 text-xs leading-tight text-ui-muted"
+          >
+            {rules.map((rule) => (
+              <li key={rule}>{rule}</li>
+            ))}
+          </RadioGroup.Description>
+        </RadioGroup.Option>
+      ))}
+    </div>
+  </RadioGroup>
+);
+
 export const SettingsModal = ({
   isOpen,
   handleClose,
   settings,
   onSettingChange,
+  level,
+  onLevelChange,
   theme,
   onToggleTheme,
 }: Props) => {
@@ -113,12 +162,7 @@ export const SettingsModal = ({
               </Dialog.Title>
 
               <div className="mt-4 divide-y divide-ui-border">
-                <Toggle
-                  label="Hard Mode"
-                  description="Every guess must fit the scores of the guesses before it"
-                  checked={settings.hardMode}
-                  onChange={(v) => onSettingChange("hardMode", v)}
-                />
+                <LevelPicker level={level} onChange={onLevelChange} />
                 <Toggle
                   label="Reveal Length"
                   description="Rings guesses that match the hidden word's length, announces the length the first time and then marks it with dotted boxes"

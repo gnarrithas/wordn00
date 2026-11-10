@@ -1,7 +1,7 @@
+import { DEFAULT_LEVEL, isLevel, Level } from "./levels";
+
 // Player options from the settings dialog, each stored under its own key.
 export type Settings = {
-  // Every guess must reuse the hints found so far (see hardMode.ts).
-  hardMode: boolean;
   // A guess with the answer's length is ringed and announced.
   revealLength: boolean;
   // Orange and blue instead of green and yellow, for colour vision deficiency.
@@ -13,20 +13,19 @@ export type Settings = {
 export type SettingKey = keyof Settings;
 
 const STORAGE_KEYS: Record<SettingKey, string> = {
-  hardMode: "hardMode",
   revealLength: "revealLength",
   highContrast: "highContrast",
   onscreenKeyboardOnly: "onscreenKeyboardOnly",
 };
 
 const DEFAULTS: Settings = {
-  hardMode: false,
   revealLength: false,
   highContrast: false,
   onscreenKeyboardOnly: false,
 };
 
-// Before these toggles, one "mode" key held easy, medium or hard.
+// Before these toggles, one "mode" key held easy, medium or hard (a hard
+// mode since dropped).
 const LEGACY_MODE_KEY = "mode";
 
 const readStorage = (key: string): string | null => {
@@ -53,9 +52,6 @@ const fromLegacyMode = (): Partial<Settings> => {
   if (legacy === "easy") {
     return { revealLength: true };
   }
-  if (legacy === "hard") {
-    return { hardMode: true };
-  }
   return {};
 };
 
@@ -76,6 +72,15 @@ export const loadSettings = (): Settings => {
 export const saveSetting = (key: SettingKey, value: boolean) => {
   writeStorage(STORAGE_KEYS[key], String(value));
 };
+
+const LEVEL_KEY = "level";
+
+export const loadLevel = (): Level => {
+  const stored = readStorage(LEVEL_KEY);
+  return isLevel(stored) ? stored : DEFAULT_LEVEL;
+};
+
+export const saveLevel = (level: Level) => writeStorage(LEVEL_KEY, level);
 
 // index.css swaps the tile colours when <html> has this class.
 export const applyHighContrast = (on: boolean) => {

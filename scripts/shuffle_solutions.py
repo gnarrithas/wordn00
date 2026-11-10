@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
-"""Write the daily word list: the shuffled solutions, up to today only.
+"""Write the daily word lists, one per level: the shuffled solutions, up to today only.
 
-Deploys run this daily after the build. Line N of the output is day N's word,
-day 0 being FIRST_DAY. The list stops at today (UTC), so tomorrow's word is
-never published; the game never asks for a day past the UTC date (see
-getDayIndex in src/lib/words.ts).
+Deploys run this daily after the build. Line N of daily-<level>.txt is day N's
+word at that level, day 0 being FIRST_DAY. Each level plays, in shuffled
+order, the solutions its rules allow (see LEVELS, mirrored from
+src/lib/levels.ts). The lists stop at today (UTC), so tomorrow's word is never
+published; the game never asks for a day past the UTC date (see getDayIndex in
+src/lib/words.ts).
 
 The shuffle depends only on the seed and the set of words. It uses
 HMAC-SHA256 in counter mode as its random stream and an exact rejection
@@ -24,6 +26,14 @@ from pathlib import Path
 SEED_ENV = "SOLUTIONS_SHUFFLE_SEED"
 # Must match FIRST_DAY_UTC in src/lib/words.ts.
 FIRST_DAY = dt.date(2026, 11, 9)
+
+# Level name -> (repeated letters allowed, letters the word may not have).
+# Must match LEVEL_RULES in src/lib/levels.ts.
+LEVELS = {
+    "standard": (False, frozenset("jqxz")),
+    "standard-plus": (False, frozenset()),
+    "advanced": (True, frozenset()),
+}
 
 log = logging.getLogger("shuffle_solutions")
 
@@ -74,9 +84,21 @@ def shuffle(words, seed: str):
     return order
 
 
-def daily_words(words, seed: str, today: dt.date):
-    """Words for day 0 through today; the shuffle wraps if it runs out."""
-    order = shuffle(words, seed)
+def fits_level(word: str, level: str) -> bool:
+    """Whether the level's rules allow `word` as an answer."""
+    repeats_allowed, banned = LEVELS[level]
+    if not repeats_allowed and len(set(word)) != len(word):
+        return False
+    return not banned.intersection(word)
+
+
+def daily_words(words, seed: str, today: dt.date, level: str = "advanced"):
+    """The level's words for day 0 through today; wraps if it runs out.
+
+    Every level filters the same shuffle, so Advanced keeps the order of the
+    single list published before levels existed.
+    """
+    order = [word for word in shuffle(words, seed) if fits_level(word, level)]
     if not order:
         return []
     last_day = max(0, (today - FIRST_DAY).days)
@@ -93,7 +115,9 @@ def parse_date(text: str) -> dt.date:
 def parse_args(argv):
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     parser.add_argument("input", type=Path, help="solution list, one word per line")
-    parser.add_argument("output", type=Path, help="daily list to write")
+    parser.add_argument(
+        "output", type=Path, help="directory to write daily-<level>.txt into"
+    )
     parser.add_argument(
         "--today",
         type=parse_date,
@@ -116,18 +140,28 @@ def main(argv=None) -> int:
         log.error("cannot read %s: %s", args.input, err)
         return 1
     today = args.today or dt.datetime.now(dt.timezone.utc).date()
-    daily = daily_words(words, seed, today)
-    if not daily:
-        log.error("%s has no words", args.input)
+    # Every level must have words before any file is written.
+    lists = {level: daily_words(words, seed, today, level) for level in LEVELS}
+    empty = [level for level, daily in lists.items() if not daily]
+    if empty:
+        log.error("%s has no words for %s", args.input, ", ".join(empty))
         return 1
     try:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text("\n".join(daily) + "\n", encoding="utf-8")
+        args.output.mkdir(parents=True, exist_ok=True)
+        for level, daily in lists.items():
+            path = args.output / f"daily-{level}.txt"
+            path.write_text("\n".join(daily) + "\n", encoding="utf-8")
     except OSError as err:
-        log.error("cannot write %s: %s", args.output, err)
+        log.error("cannot write to %s: %s", args.output, err)
         return 1
     # Only counts: the words themselves are the secret.
-    log.info("wrote days 0-%d (as of %s UTC) to %s", len(daily) - 1, today, args.output)
+    log.info(
+        "wrote days 0-%d (as of %s UTC) for %d levels to %s",
+        max(0, (today - FIRST_DAY).days),
+        today,
+        len(lists),
+        args.output,
+    )
     return 0
 
 

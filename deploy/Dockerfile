@@ -36,7 +36,7 @@ RUN npm run build
 # day reruns this step instead of reusing yesterday's list.
 ARG WORDS_DAY=
 RUN --mount=type=secret,id=SOLUTIONS_SHUFFLE_SEED,env=SOLUTIONS_SHUFFLE_SEED \
-    python3 scripts/shuffle_solutions.py public/words/solutions.txt build/words/daily.txt \
+    python3 scripts/shuffle_solutions.py public/words/solutions.txt build/words \
       ${WORDS_DAY:+--today "$WORDS_DAY"}
 
 # --- runtime stage ----------------------------------------------------------

@@ -1,3 +1,4 @@
+import { getLevelName, Level } from "./levels";
 import { getScore, Score } from "./score";
 
 const EMOJI: Record<keyof Score, string> = {
@@ -18,13 +19,15 @@ const SCORE_ORDER: (keyof Score)[] = ["correct", "present", "absent"];
 export const countLetters = (guesses: string[]) =>
   guesses.reduce((total, guess) => total + guess.length, 0);
 
-// Result: "Wordn00 <number> · <letters>", then each guess's score, e.g.
+// Result: "Wordn00 <number> · <level> · <letters>", then each guess's
+// score, e.g.
 // "🟩2 🟨1 🟥2". The
 // guess count and limit are left out: the limit gives away the word's length.
 // Numbers start at 1 for day index 0; games off the daily sequence (dev New
 // word) have none.
 export const getShareText = (
   day: number | null,
+  level: Level,
   guesses: string[],
   solution: string,
   highContrast = false,
@@ -38,7 +41,7 @@ export const getShareText = (
   const letters = countLetters(guesses);
   const title =
     day === null ? "Wordn00" : `Wordn00 ${(day + 1).toLocaleString("en-US")}`;
-  const header = `${title} · ${letters} ${
+  const header = `${title} · ${getLevelName(level)} · ${letters} ${
     letters === 1 ? "letter" : "letters"
   }`;
   const footer = url ? ["", url] : [];

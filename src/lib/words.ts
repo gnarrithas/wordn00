@@ -1,21 +1,32 @@
 import { MIN_GUESSES } from "../constants/settings";
+import { fitsLevel, Level, LEVELS } from "./levels";
 
 const MS_IN_DAY = 86400000;
 // Day 0 of the daily sequence: 9 November 2026 (months count from 0). Must
 // match FIRST_DAY in scripts/shuffle_solutions.py.
 const FIRST_DAY_UTC = Date.UTC(2026, 10, 9);
 
-// The word lists are served as plain text from public/words/ and fetched at
-// startup instead of being bundled into the JavaScript.
-type WordLists = {
+// One level's possible answers and daily sequence.
+type LevelLists = {
   solutions: string[];
   solutionSet: Set<string>;
-  guessSet: Set<string>;
   shortest: number;
   longest: number;
   // Line N is day N's word. Deploys publish it daily, up to today (UTC) only.
   daily: string[];
 };
+
+// The word lists are served as plain text from public/words/ and fetched at
+// startup instead of being bundled into the JavaScript.
+type WordLists = {
+  solutionSet: Set<string>;
+  guessSet: Set<string>;
+  levels: Record<Level, LevelLists>;
+  // Days published, the same for every level.
+  days: number;
+};
+
+export type DailyTexts = Record<Level, string>;
 
 let lists: WordLists | undefined;
 let loading: Promise<void> | undefined;
@@ -26,16 +37,14 @@ const parseList = (text: string) =>
     .map((word) => word.trim().toLowerCase())
     .filter((word) => word.length > 0);
 
-// Installs the lists from their file contents (also used by tests). Without
-// a daily list (development), days walk through the solutions in order.
-export const setWordLists = (
-  solutionsText: string,
-  guessesText: string,
+const buildLevel = (
+  allSolutions: string[],
+  level: Level,
   dailyText?: string,
-) => {
-  const solutions = parseList(solutionsText);
+): LevelLists => {
+  const solutions = allSolutions.filter((word) => fitsLevel(word, level));
   if (solutions.length === 0) {
-    throw new Error("The solution list is empty");
+    throw new Error(`No solution fits the ${level} level`);
   }
   let shortest = Infinity;
   let longest = 0;
@@ -47,17 +56,42 @@ export const setWordLists = (
   const daily = dailyText === undefined ? solutions : parseList(dailyText);
   // Also rejects an HTML page served in place of a missing file.
   if (daily.length === 0 || !daily.every((word) => solutionSet.has(word))) {
-    throw new Error("The daily list is empty or not made of solutions");
+    throw new Error(
+      `The ${level} daily list is empty or not made of its solutions`,
+    );
   }
+  return { solutions, solutionSet, shortest, longest, daily };
+};
+
+// Installs the lists from their file contents (also used by tests). Without
+// daily lists (development), days walk through each level's solutions in
+// order.
+export const setWordLists = (
+  solutionsText: string,
+  guessesText: string,
+  dailyTexts?: DailyTexts,
+) => {
+  const solutions = parseList(solutionsText);
+  if (solutions.length === 0) {
+    throw new Error("The solution list is empty");
+  }
+  const levels = Object.fromEntries(
+    LEVELS.map(({ level }) => [
+      level,
+      buildLevel(solutions, level, dailyTexts?.[level]),
+    ]),
+  ) as Record<Level, LevelLists>;
   lists = {
-    solutions,
-    solutionSet,
+    solutionSet: new Set(solutions),
     guessSet: new Set(parseList(guessesText)),
-    shortest,
-    longest,
-    daily,
+    levels,
+    // A deploy writes every level's list at once; should they ever differ,
+    // no level gets a day the others lack.
+    days: Math.min(...Object.values(levels).map((l) => l.daily.length)),
   };
 };
+
+const dailyPath = (level: Level) => `/words/daily-${level}.txt`;
 
 // BASE_URL always ends in "/", and every path starts with one.
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
@@ -72,14 +106,23 @@ const fetchText = async (path: string) => {
 
 export const areWordsLoaded = () => lists !== undefined;
 
-// Fetches both lists once; a failed load can be retried by calling it again.
+const fetchDailyTexts = async (): Promise<DailyTexts> => {
+  const texts = await Promise.all(
+    LEVELS.map(({ level }) => fetchText(dailyPath(level))),
+  );
+  return Object.fromEntries(
+    LEVELS.map(({ level }, i) => [level, texts[i]]),
+  ) as DailyTexts;
+};
+
+// Fetches the lists once; a failed load can be retried by calling it again.
 export const loadWords = () => {
   if (!loading) {
-    // Development has no daily list; production cannot work without one.
+    // Development has no daily lists; production cannot work without them.
     loading = Promise.all([
       fetchText("/words/solutions.txt"),
       fetchText("/words/guesses.txt"),
-      import.meta.env.DEV ? undefined : fetchText("/words/daily.txt"),
+      import.meta.env.DEV ? undefined : fetchDailyTexts(),
     ])
       .then(([solutions, guesses, daily]) =>
         setWordLists(solutions, guesses, daily),
@@ -99,9 +142,10 @@ const getLists = () => {
   return lists;
 };
 
-// Shortest and longest possible solution.
-export const getSolutionLengthRange = () => {
-  const { shortest, longest } = getLists();
+// Shortest and longest possible solution at the level; Advanced allows
+// every solution.
+export const getSolutionLengthRange = (level: Level = "advanced") => {
+  const { shortest, longest } = getLists().levels[level];
   return { shortest, longest };
 };
 
@@ -115,11 +159,12 @@ export const isWordInWordList = (word: string) => {
   return solutionSet.has(lower) || guessSet.has(lower);
 };
 
-// Every possible answer, lower case.
-export const getSolutions = (): readonly string[] => getLists().solutions;
+// Every possible answer at the level, lower case.
+export const getSolutions = (level: Level): readonly string[] =>
+  getLists().levels[level].solutions;
 
-export const isSolution = (word: string) =>
-  getLists().solutionSet.has(word.toLowerCase());
+export const isSolution = (word: string, level: Level) =>
+  getLists().levels[level].solutionSet.has(word.toLowerCase());
 
 // Days since the first day, by the earlier of the player's calendar date and
 // the UTC date. Deploys publish words up to the UTC date only, so tomorrow's
@@ -134,14 +179,14 @@ export const getDayIndex = (now = new Date()) => {
     now.getUTCDate(),
   );
   const day = Math.round((Math.min(local, utc) - FIRST_DAY_UTC) / MS_IN_DAY);
-  return Math.min(Math.max(0, day), getLists().daily.length - 1);
+  return Math.min(Math.max(0, day), getLists().days - 1);
 };
 
-export const getWordOfDay = (day = getDayIndex()) =>
-  getLists().daily[day].toUpperCase();
+export const getWordOfDay = (level: Level, day = getDayIndex()) =>
+  getLists().levels[level].daily[day].toUpperCase();
 
-export const getRandomWord = (exclude: string) => {
-  const { solutions } = getLists();
+export const getRandomWord = (exclude: string, level: Level) => {
+  const { solutions } = getLists().levels[level];
   if (solutions.length < 2) {
     return solutions[0].toUpperCase();
   }

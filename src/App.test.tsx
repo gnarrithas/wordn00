@@ -279,7 +279,6 @@ test("settings start off and survive a reload", async () => {
   const { unmount } = await renderGame();
   openSettings();
   for (const name of [
-    "Hard Mode",
     "Reveal Length",
     "High Contrast Mode",
     "Onscreen Keyboard Input Only",
@@ -557,7 +556,7 @@ test("Share copies the day number (from 1), letter count and site link", async (
     fireEvent.click(screen.getByText("Share"));
   });
   expect(writeText).toHaveBeenCalledWith(
-    "Wordn00 3 · 6 letters\n\n🟩2 🟨0 🟥1\n🟩3 🟨0 🟥0\n\n" +
+    "Wordn00 3 · Standard · 6 letters\n\n🟩2 🟨0 🟥1\n🟩3 🟨0 🟥0\n\n" +
       new URL(import.meta.env.BASE_URL, window.location.origin).href,
   );
   delete (navigator as any).clipboard;
@@ -565,7 +564,7 @@ test("Share copies the day number (from 1), letter count and site link", async (
 
 test("a saved word that left the solution list is discarded", async () => {
   window.localStorage.setItem(
-    "game",
+    "game-standard",
     JSON.stringify({
       solution: "QWXZ",
       guesses: ["COT"],
@@ -634,38 +633,70 @@ test("without reveal length, nothing is outlined nor announced", async () => {
   expect(inputRow()!.querySelectorAll(".border-dotted")).toHaveLength(0);
 });
 
-test("hard mode rejects guesses that ignore the hints", async () => {
+const levelOption = (name: string) => screen.getByRole("radio", { name });
+
+test("settings offer the three levels with their rules, Standard first", async () => {
   await renderGame();
-  toggleSetting("Hard Mode");
-  submit("COT");
-  submit("DOG");
-  expect(toast("Guess must fit the score of guess 1")).toBeInTheDocument();
-  expect(boardText()).toBe("COTDOG");
-  press("Backspace");
-  press("Backspace");
-  press("Backspace");
-  submit("CUT");
-  expect(boardText()).toBe("COTCUT");
+  openSettings();
+  expect(screen.queryByRole("switch", { name: "Hard Mode" })).toBeNull();
+  expect(levelOption("Standard")).toHaveAttribute("aria-checked", "true");
+  expect(levelOption("Standard")).toHaveTextContent("No J, Q, X or Z");
+  expect(levelOption("Standard+")).toHaveAttribute("aria-checked", "false");
+  expect(levelOption("Standard+")).toHaveTextContent("No repeated letters");
+  expect(levelOption("Advanced")).toHaveTextContent("Anything goes");
 });
 
-test("hard mode cannot be turned on mid-round", async () => {
-  await renderGame();
+test("each level keeps its own game, and the level survives a reload", async () => {
+  const { unmount } = await renderGame();
   submit("COT");
   openSettings();
-  mouseClick(settingSwitch("Hard Mode"));
-  expect(
-    toast("Hard mode can only be enabled at the start of a round"),
-  ).toBeInTheDocument();
-  expect(settingSwitch("Hard Mode")).toHaveAttribute("aria-checked", "false");
+  mouseClick(levelOption("Advanced"));
+  // The dialog stays open on the new level's game.
+  expect(levelOption("Advanced")).toHaveAttribute("aria-checked", "true");
   closeSettings();
+  expect(boardText()).toBe("");
   submit("DOG");
-  expect(boardText()).toBe("COTDOG");
+  unmount();
+  await renderGame();
+  expect(boardText()).toBe("DOG");
+  openSettings();
+  mouseClick(levelOption("Standard"));
+  closeSettings();
+  expect(boardText()).toBe("COT");
+});
+
+test("a finished level game comes back finished, with no toast", async () => {
+  await renderGame();
+  submit("CAT");
+  act(() => {
+    vi.advanceTimersByTime(10000);
+  });
+  openSettings();
+  mouseClick(levelOption("Standard+"));
+  closeSettings();
+  expect(inputRow()).not.toBeNull();
+  expect(screen.getByText("Share")).toBeDisabled();
+  openSettings();
+  mouseClick(levelOption("Standard"));
+  closeSettings();
+  expect(inputRow()).toBeNull();
+  expect(boardText()).toBe("CAT");
+  expect(screen.getByText("Share")).toBeEnabled();
+  expect(screen.getByRole("status")).toHaveTextContent("");
+});
+
+test("guesses are not limited by the level", async () => {
+  await renderGame();
+  submit("JAZZ");
+  expect(boardText()).toBe("JAZZ");
 });
 
 test("a won game reports its start and its end", async () => {
   await renderGame();
   submit("COT");
-  expect(eventsNamed("game_start")).toEqual([{ length: 3 }]);
+  expect(eventsNamed("game_start")).toEqual([
+    { length: 3, level: "standard" },
+  ]);
   expect(eventsNamed("game_end")).toEqual([]);
   submit("CAT");
   expect(eventsNamed("game_start")).toHaveLength(1);
@@ -674,6 +705,7 @@ test("a won game reports its start and its end", async () => {
       outcome: "won",
       guesses: 2,
       length: 3,
+      level: "standard",
       maxGuesses: getMaxGuesses("CAT"),
       seconds: 0,
       word: "CAT",

@@ -39,7 +39,7 @@ jobs:
           BASE_PATH: /${{ github.event.repository.name }}/
       # Words up to today (UTC), never tomorrow's; fails the deploy if
       # the secret is missing.
-      - run: python3 scripts/shuffle_solutions.py public/words/solutions.txt build/words/daily.txt
+      - run: python3 scripts/shuffle_solutions.py public/words/solutions.txt build/words
         env:
           SOLUTIONS_SHUFFLE_SEED: ${{ secrets.SOLUTIONS_SHUFFLE_SEED }}
       - uses: actions/upload-pages-artifact@v3

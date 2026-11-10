@@ -18,8 +18,9 @@ plugin): the Dockerfile uses a cache mount, a build secret and
 
 ### Daily words
 
-The build writes `/words/daily.txt` with `scripts/shuffle_solutions.py`: the
-solutions shuffled by `SOLUTIONS_SHUFFLE_SEED` (a build secret, so it stays
+The build writes `/words/daily-<level>.txt` (`standard`, `standard-plus`,
+`advanced`) with `scripts/shuffle_solutions.py`: the solutions each level
+allows, shuffled by `SOLUTIONS_SHUFFLE_SEED` (a build secret, so it stays
 out of the image), for every day up to `WORDS_DAY` (UTC). Tomorrow's word is
 never published. The build fails without the seed. Use the same seed as the
 GitHub Pages deploy so both serve the same daily word.
@@ -40,7 +41,7 @@ word until the next rebuild.
 
 - `GET /healthz` returns `ok` for load-balancer and container health checks.
 - Hashed assets under `/assets/` are cached for a year; the word lists under
-  `/words/` for an hour, except `daily.txt`, which is always revalidated; `index.html` is always revalidated, so a redeploy is
+  `/words/` for an hour, except the `daily-*.txt` lists, which are always revalidated; `index.html` is always revalidated, so a redeploy is
   picked up on the next page load.
 
 ## Production stack with analytics

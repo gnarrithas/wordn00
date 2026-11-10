@@ -62,10 +62,28 @@ class ShuffleTest(unittest.TestCase):
             s.daily_words(WORDS, "test-seed", day_9), order + order[:2]
         )
 
-    def test_main_writes_the_daily_list_and_requires_the_seed(self):
+    def test_level_rules(self):
+        self.assertTrue(s.fits_level("crane", "standard"))
+        self.assertFalse(s.fits_level("jumbo", "standard"))
+        self.assertTrue(s.fits_level("jumbo", "standard-plus"))
+        self.assertFalse(s.fits_level("alpha", "standard-plus"))
+        self.assertTrue(s.fits_level("alpha", "advanced"))
+        self.assertTrue(s.fits_level("jazzy", "advanced"))
+
+    def test_levels_filter_the_same_shuffle(self):
+        order = s.shuffle(WORDS, "test-seed")
+        today = s.FIRST_DAY + dt.timedelta(days=len(WORDS) - 1)
+        self.assertEqual(s.daily_words(WORDS, "test-seed", today, "advanced"), order)
+        # alpha and foxtrot repeat a letter.
+        self.assertEqual(
+            s.daily_words(WORDS, "test-seed", today, "standard")[:4],
+            ["delta", "bravo", "golf", "echo"],
+        )
+
+    def test_main_writes_a_list_per_level_and_requires_the_seed(self):
         with tempfile.TemporaryDirectory() as tmp:
             source = Path(tmp) / "solutions.txt"
-            output = Path(tmp) / "out" / "daily.txt"
+            output = Path(tmp) / "out"
             source.write_text("\n".join(WORDS))
             args = [str(source), str(output), "--today", "2026-11-10"]
             with mock.patch.dict(os.environ, {s.SEED_ENV: ""}):
@@ -73,8 +91,19 @@ class ShuffleTest(unittest.TestCase):
             self.assertFalse(output.exists())
             with mock.patch.dict(os.environ, {s.SEED_ENV: "test-seed"}):
                 self.assertEqual(s.main(args), 0)
-            expected = s.shuffle(WORDS, "test-seed")[:2]
-            self.assertEqual(output.read_text(), "\n".join(expected) + "\n")
+            self.assertEqual(
+                sorted(p.name for p in output.iterdir()),
+                ["daily-advanced.txt", "daily-standard-plus.txt", "daily-standard.txt"],
+            )
+            for level in s.LEVELS:
+                expected = s.daily_words(
+                    WORDS, "test-seed", dt.date(2026, 11, 10), level
+                )
+                self.assertEqual(len(expected), 2)
+                self.assertEqual(
+                    (output / f"daily-{level}.txt").read_text(),
+                    "\n".join(expected) + "\n",
+                )
             # The source list is left alone.
             self.assertEqual(source.read_text(), "\n".join(WORDS))
 

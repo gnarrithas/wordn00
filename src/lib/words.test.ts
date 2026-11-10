@@ -3,11 +3,15 @@ import { join } from "path";
 import {
   getDayIndex,
   getMaxGuesses,
+  getRandomWord,
   getSolutionLengthRange,
+  getSolutions,
   getWordOfDay,
+  isSolution,
   isWordInWordList,
   setWordLists,
 } from "./words";
+import { fitsLevel } from "./levels";
 
 const read = (name: string) =>
   readFileSync(join(__dirname, "../../public/words", name), "utf8");
@@ -67,27 +71,77 @@ test("a clock set before the first day gets day 0", () => {
   expect(getDayIndex(at(2021, 6, 1))).toBe(0);
 });
 
-test("without a daily list, day N plays solution N", () => {
-  expect(getWordOfDay(0)).toBe(WORDS[0].toUpperCase());
-  expect(getWordOfDay(1)).toBe(WORDS[1].toUpperCase());
+test("without daily lists, day N plays the level's solution N", () => {
+  expect(getWordOfDay("advanced", 0)).toBe(WORDS[0].toUpperCase());
+  expect(getWordOfDay("advanced", 1)).toBe(WORDS[1].toUpperCase());
+  const standard = WORDS.filter((w) => fitsLevel(w, "standard"));
+  expect(getWordOfDay("standard", 0)).toBe(standard[0].toUpperCase());
+});
+
+test("each level's answers follow its rules", () => {
+  expect(fitsLevel("CRANE", "standard")).toBe(true);
+  expect(fitsLevel("JUMBO", "standard")).toBe(false);
+  expect(fitsLevel("JUMBO", "standard-plus")).toBe(true);
+  expect(fitsLevel("APPLE", "standard-plus")).toBe(false);
+  expect(fitsLevel("JAZZY", "advanced")).toBe(true);
+  expect(getSolutions("advanced")).toHaveLength(WORDS.length);
+  expect(getSolutions("standard").every((w) => fitsLevel(w, "standard"))).toBe(
+    true,
+  );
+  expect(getSolutions("standard-plus").length).toBeGreaterThan(
+    getSolutions("standard").length,
+  );
+  expect(isSolution("apple", "advanced")).toBe(true);
+  expect(isSolution("apple", "standard-plus")).toBe(false);
+  for (let i = 0; i < 20; i++) {
+    expect(fitsLevel(getRandomWord("", "standard"), "standard")).toBe(true);
+  }
+});
+
+const daily = (standard: string, standardPlus: string, advanced: string) => ({
+  standard,
+  "standard-plus": standardPlus,
+  advanced,
 });
 
 describe("with a published daily list", () => {
   afterAll(() => setWordLists(solutionsText, read("guesses.txt")));
 
   test("day N plays line N, and days past the list stay on its last line", () => {
-    setWordLists(solutionsText, "", "cat\ndog\n");
-    expect(getWordOfDay(0)).toBe("CAT");
+    setWordLists(
+      solutionsText,
+      "",
+      daily("cat\ndog\n", "crane\njumbo\n", "apple\npizza\n"),
+    );
+    expect(getWordOfDay("standard", 0)).toBe("CAT");
+    expect(getWordOfDay("standard-plus", 0)).toBe("CRANE");
+    expect(getWordOfDay("advanced", 0)).toBe("APPLE");
     inZone("UTC", () => {
       expect(getDayIndex(at(2026, 11, 10))).toBe(1);
       expect(getDayIndex(at(2027, 6, 1))).toBe(1);
-      expect(getWordOfDay(getDayIndex(at(2027, 6, 1)))).toBe("DOG");
+      expect(getWordOfDay("advanced", getDayIndex(at(2027, 6, 1)))).toBe(
+        "PIZZA",
+      );
     });
   });
 
-  test("a daily list that is empty or not solutions is refused", () => {
-    expect(() => setWordLists(solutionsText, "", "")).toThrow();
-    expect(() => setWordLists(solutionsText, "", "<!doctype html>")).toThrow();
+  test("days stop at the shortest level list", () => {
+    setWordLists(solutionsText, "", daily("cat\ndog\n", "crane\n", "apple\n"));
+    inZone("UTC", () => {
+      expect(getDayIndex(at(2027, 6, 1))).toBe(0);
+    });
+  });
+
+  test("a daily list that is empty, not solutions, or off its level is refused", () => {
+    const ok = "cat\n";
+    expect(() => setWordLists(solutionsText, "", daily("", ok, ok))).toThrow();
+    expect(() =>
+      setWordLists(solutionsText, "", daily(ok, "<!doctype html>", ok)),
+    ).toThrow();
+    // APPLE repeats a letter, so it can never be a Standard answer.
+    expect(() =>
+      setWordLists(solutionsText, "", daily("apple\n", ok, ok)),
+    ).toThrow();
   });
 });
 
@@ -95,7 +149,7 @@ test("production loads the daily list; development does not fetch it", async () 
   const fetched: string[] = [];
   const respond = (url: RequestInfo | URL) => {
     fetched.push(String(url));
-    const body = String(url).endsWith("daily.txt") ? "dog\n" : "cat\ndog\n";
+    const body = String(url).includes("/daily-") ? "dog\n" : "cat\ndog\n";
     return Promise.resolve({
       ok: true,
       status: 200,
@@ -109,16 +163,22 @@ test("production loads the daily list; development does not fetch it", async () 
     vi.resetModules();
     const prod = await import("./words");
     await prod.loadWords();
-    expect(fetched).toContain("/words/daily.txt");
-    expect(prod.getWordOfDay(0)).toBe("DOG");
+    expect(fetched).toEqual(
+      expect.arrayContaining([
+        "/words/daily-standard.txt",
+        "/words/daily-standard-plus.txt",
+        "/words/daily-advanced.txt",
+      ]),
+    );
+    expect(prod.getWordOfDay("standard", 0)).toBe("DOG");
 
     fetched.length = 0;
     vi.stubEnv("DEV", true);
     vi.resetModules();
     const dev = await import("./words");
     await dev.loadWords();
-    expect(fetched).not.toContain("/words/daily.txt");
-    expect(dev.getWordOfDay(0)).toBe("CAT");
+    expect(fetched.some((url) => url.includes("/daily-"))).toBe(false);
+    expect(dev.getWordOfDay("standard", 0)).toBe("CAT");
   } finally {
     window.fetch = original;
     vi.unstubAllEnvs();
@@ -131,8 +191,12 @@ test("lookups are case-insensitive and cover both lists", () => {
   expect(isWordInWordList("QWXZ")).toBe(false);
 });
 
-test("the length range comes from the solutions", () => {
+test("the length range comes from the level's solutions", () => {
   expect(getSolutionLengthRange()).toEqual({ shortest: 3, longest: 18 });
+  expect(getSolutionLengthRange("standard")).toEqual({
+    shortest: 3,
+    longest: 12,
+  });
 });
 
 test("max guesses are 2 × (length - 1), at least 8", () => {

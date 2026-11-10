@@ -1,10 +1,15 @@
-import { applyHighContrast, loadSettings, saveSetting } from "./settings";
+import {
+  applyHighContrast,
+  loadLevel,
+  loadSettings,
+  saveLevel,
+  saveSetting,
+} from "./settings";
 
 beforeEach(() => localStorage.clear());
 
 test("every setting is off by default", () => {
   expect(loadSettings()).toEqual({
-    hardMode: false,
     revealLength: false,
     highContrast: false,
     onscreenKeyboardOnly: false,
@@ -12,10 +17,10 @@ test("every setting is off by default", () => {
 });
 
 test("settings survive a reload", () => {
-  saveSetting("hardMode", true);
+  saveSetting("highContrast", true);
   saveSetting("onscreenKeyboardOnly", true);
   expect(loadSettings()).toMatchObject({
-    hardMode: true,
+    highContrast: true,
     onscreenKeyboardOnly: true,
     revealLength: false,
   });
@@ -26,13 +31,23 @@ test("junk in storage falls back to the default", () => {
   expect(loadSettings().highContrast).toBe(false);
 });
 
-test("the old easy and hard modes carry over", () => {
+test("the old easy mode carries over; the old hard mode is dropped", () => {
   localStorage.setItem("mode", "easy");
-  expect(loadSettings()).toMatchObject({ revealLength: true, hardMode: false });
+  expect(loadSettings().revealLength).toBe(true);
   localStorage.setItem("mode", "hard");
-  expect(loadSettings()).toMatchObject({ revealLength: false, hardMode: true });
-  saveSetting("hardMode", false);
-  expect(loadSettings().hardMode).toBe(false);
+  expect(loadSettings()).toEqual({
+    revealLength: false,
+    highContrast: false,
+    onscreenKeyboardOnly: false,
+  });
+});
+
+test("the level starts at Standard and survives a reload", () => {
+  expect(loadLevel()).toBe("standard");
+  saveLevel("advanced");
+  expect(loadLevel()).toBe("advanced");
+  localStorage.setItem("level", "nightmare");
+  expect(loadLevel()).toBe("standard");
 });
 
 test("high contrast is a class on <html>", () => {

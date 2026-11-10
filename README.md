@@ -24,7 +24,10 @@ coloured tiles), stretched like Wordler: the hidden word can be anywhere from
   red are marked red automatically, and stay so.
 - **Keyboard extras.** **Space** (or `-`) types a blank to fill in later;
   **Hint** types a word that fits every score so far.
-- **Hard mode.** Every guess must fit the scores of the guesses before it.
+- **Levels.** As on Word500, Settings picks the level, which limits the
+  answer, never the guesses: **Standard** (no repeated letters, no J, Q, X
+  or Z; the default), **Standard+** (no repeated letters) or **Advanced**
+  (anything goes). Each level has its own daily word and saved game.
 - **Letters used.** Every guessed letter counts towards a secondary score.
 - **Unlimited play.** The first game each day uses the daily word; **New
   word** starts a random one. Progress, marks included, is kept in the
