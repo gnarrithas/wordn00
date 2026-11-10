@@ -19,6 +19,8 @@ type Props = {
   // The space bar spans the width of five letters.
   isSpace?: boolean;
   status?: CharStatus;
+  // A letter already guessed: dimmed, as in Word500, unless marked.
+  isUsed?: boolean;
   onClick: (value: KeyValue) => void;
 };
 
@@ -27,6 +29,7 @@ export const Key = ({
   status,
   isWide = false,
   isSpace = false,
+  isUsed = false,
   value,
   onClick,
 }: Props) => {
@@ -37,7 +40,8 @@ export const Key = ({
       // Word labels are smaller than letters; SPACE is spaced out.
       "flex-[5] max-w-[240px] text-xs tracking-[2px]": isSpace,
       "flex-[1.5] max-w-[72px] text-xs": isWide,
-      "bg-ui-key text-ui-text": !status,
+      "bg-ui-key text-ui-text": !status && !isUsed,
+      "bg-ui-key-used text-ui-key-used-text": !status && isUsed,
       "bg-wordle-absent dark:bg-wordle-night-absent text-white":
         status === "absent",
       "bg-wordle-correct dark:bg-wordle-night-correct text-white":
@@ -47,8 +51,10 @@ export const Key = ({
     },
   );
 
-  // Screen readers hear the letter's mark too, e.g. "A, correct".
-  const label = KEY_LABELS[value] ?? (status ? `${value}, ${status}` : value);
+  // Screen readers hear the letter's mark, else whether it was guessed.
+  const label =
+    KEY_LABELS[value] ??
+    (status ? `${value}, ${status}` : isUsed ? `${value}, used` : value);
 
   return (
     <button

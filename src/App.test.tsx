@@ -252,7 +252,9 @@ test("tiles, rows and keys have accessible names", async () => {
   expect(
     screen.getByRole("img", { name: "2 correct, 0 present, 1 absent" }),
   ).toBeInTheDocument();
-  expect(screen.getAllByRole("button", { name: "C" })).toHaveLength(2);
+  // The board tile, and the keyboard key of a guessed letter.
+  expect(screen.getByRole("button", { name: "C" })).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "C, used" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Enter" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
   expect(
@@ -746,7 +748,7 @@ test("tapping a guessed letter cycles its mark on the board and keyboard", async
   await renderGame();
   expect(key("C, correct")).toHaveLength(1);
   mouseClick(tile());
-  expect(key("C")).toHaveLength(1);
+  expect(key("C, used")).toHaveLength(1);
 });
 
 test("a won game's tiles are green and no longer markable", async () => {
@@ -800,5 +802,20 @@ test("an all-red guess marks its letters red, locked even through Clear", async 
   mouseClick(screen.getByRole("button", { name: "Clear marks" }));
   expect(
     within(row).getByRole("img", { name: "D absent" }),
+  ).toBeInTheDocument();
+});
+
+test("guessed letters dim their keys unless marked", async () => {
+  await renderGame();
+  expect(screen.getByRole("button", { name: "C" })).toBeInTheDocument();
+  submit("COT");
+  for (const name of ["C, used", "O, used", "T, used"]) {
+    expect(screen.getByRole("button", { name })).toBeInTheDocument();
+  }
+  expect(screen.getByRole("button", { name: "A" })).toBeInTheDocument();
+  const row = screen.getByRole("group", { name: "Guess: COT" });
+  mouseClick(within(row).getByRole("button", { name: "C" }));
+  expect(
+    screen.getByRole("button", { name: "C, absent" }),
   ).toBeInTheDocument();
 });

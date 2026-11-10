@@ -11,6 +11,8 @@
   --ui-tile: #e4e4e7;
   --ui-filled: #d0d0d5;
   --ui-key: #dcdce0;
+  --ui-key-used: #f2f2f4; /* keys of letters already guessed */
+  --ui-key-used-text: #a1a1aa;
   --ui-text: #1f1f22;
   --ui-muted: #6b6b70;
   --ui-border: rgba(0, 0, 0, 0.1);
@@ -60,6 +62,8 @@ html.dark {
   --ui-tile: #2a2a2a;
   --ui-filled: #3a3a3c;
   --ui-key: #333336;
+  --ui-key-used: #121214;
+  --ui-key-used-text: #555555;
   --ui-text: #cccccc;
   --ui-muted: #888888;
   --ui-border: rgba(255, 255, 255, 0.1);

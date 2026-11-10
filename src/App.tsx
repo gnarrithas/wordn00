@@ -269,6 +269,8 @@ function Game() {
     guesses.slice(0, revealedCount).some((g) => g.length === solution.length)
       ? solution.length
       : undefined;
+  // Keys of letters already guessed are dimmed, as soon as Enter is pressed.
+  const usedLetters = useMemo(() => new Set(guesses.join("")), [guesses]);
   // Letters of all-red guesses, marked red by the game once the score is in.
   const forcedAbsent = useMemo(
     () => getForcedAbsent(guesses.slice(0, revealedCount), solution),
@@ -570,6 +572,7 @@ function Game() {
           onHint={onHint}
           onClearMarks={onClearMarks}
           marks={shownMarks}
+          usedLetters={usedLetters}
           isPhysicalKeyboardIgnored={settings.onscreenKeyboardOnly}
           isInputDisabled={isInfoModalOpen || isSettingsModalOpen}
         />

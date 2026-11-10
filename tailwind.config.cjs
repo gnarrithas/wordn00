@@ -23,6 +23,8 @@ module.exports = {
           tile: "var(--ui-tile)",
           filled: "var(--ui-filled)",
           key: "var(--ui-key)",
+          "key-used": "var(--ui-key-used)",
+          "key-used-text": "var(--ui-key-used-text)",
           text: "var(--ui-text)",
           muted: "var(--ui-muted)",
           border: "var(--ui-border)",
