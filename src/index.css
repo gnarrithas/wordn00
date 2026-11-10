@@ -134,6 +134,21 @@ body {
   }
 }
 
+/* Score boxes keep their colours while flipping; the digit appears as the
+   box turns edge-on. */
+.score-reveal {
+  animation-name: cell-reveal-flip, score-reveal-hide;
+  animation-timing-function: ease-in-out, linear;
+  animation-fill-mode: backwards, backwards;
+}
+
+@keyframes score-reveal-hide {
+  from,
+  to {
+    color: transparent;
+  }
+}
+
 /* Logo tiles flip like guesses, but start grey ("absent") rather than blank. */
 .logo-reveal {
   animation-name: cell-reveal-flip, logo-reveal-hide;
@@ -260,6 +275,7 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .cell-reveal,
+  .score-reveal,
   .logo-reveal,
   .cell-bounce,
   .length-match::before,
