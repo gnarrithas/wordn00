@@ -6,43 +6,65 @@ import {
   getRowRevealMs,
 } from "../../lib/reveal";
 
-const LETTERS = "WORDN00".split("");
+// A 2×2 square, read left to right and top to bottom: a white W, then the
+// three hint colours.
+const TILES = [
+  {
+    letter: "W",
+    classes:
+      "bg-white text-black border-2 border-wordle-filled dark:border-wordle-night-filled",
+  },
+  {
+    letter: "N",
+    classes: "bg-wordle-correct dark:bg-wordle-night-correct text-white",
+  },
+  {
+    letter: "0",
+    classes: "bg-wordle-present dark:bg-wordle-night-present text-white",
+  },
+  {
+    letter: "0",
+    classes: "bg-wordle-absent dark:bg-wordle-night-absent text-white",
+  },
+];
 // Give the page a moment to paint before the tiles start flipping.
 const START_MS = 300;
 
-// The title as a row of tiles that flip from grey to green, then bounce,
+// The title as tiles that flip from grey to their colours, then bounce,
 // replaying the game's win animation on every page load.
 export const Logo = () => {
-  const revealStaggerMs = getRevealStaggerMs(LETTERS.length);
-  const bounceStartMs = START_MS + getRowRevealMs(LETTERS.length);
-  const bounceStaggerMs = getBounceStaggerMs(LETTERS.length);
+  const revealStaggerMs = getRevealStaggerMs(TILES.length);
+  const bounceStartMs = START_MS + getRowRevealMs(TILES.length);
+  const bounceStaggerMs = getBounceStaggerMs(TILES.length);
 
   return (
-    <h1 className="flex grow min-w-0" aria-label="Wordn00">
-      {LETTERS.map((letter, i) => {
-        const revealDelayMs = START_MS + i * revealStaggerMs;
-        return (
-          <div
-            key={i}
-            aria-hidden="true"
-            className="cell-bounce"
-            style={{
-              animationDuration: `${BOUNCE_MS}ms`,
-              animationDelay: `${bounceStartMs + i * bounceStaggerMs}ms`,
-            }}
-          >
+    <div className="flex grow min-w-0">
+      <h1 className="grid grid-cols-2 gap-px" aria-label="Wordn00">
+        {TILES.map(({ letter, classes }, i) => {
+          const revealDelayMs = START_MS + i * revealStaggerMs;
+          return (
             <div
-              className="logo-reveal w-4 h-4 text-[10px] sm:w-[30px] sm:h-[30px] sm:text-base mr-px flex items-center justify-center rounded bg-wordle-correct dark:bg-wordle-night-correct text-white font-bold"
+              key={i}
+              aria-hidden="true"
+              className="cell-bounce"
               style={{
-                animationDuration: `${FLIP_MS}ms, ${FLIP_MS / 2}ms`,
-                animationDelay: `${revealDelayMs}ms, ${revealDelayMs}ms`,
+                animationDuration: `${BOUNCE_MS}ms`,
+                animationDelay: `${bounceStartMs + i * bounceStaggerMs}ms`,
               }}
             >
-              {letter}
+              <div
+                className={`logo-reveal w-5 h-5 text-xs sm:w-6 sm:h-6 sm:text-sm flex items-center justify-center rounded font-bold ${classes}`}
+                style={{
+                  animationDuration: `${FLIP_MS}ms, ${FLIP_MS / 2}ms`,
+                  animationDelay: `${revealDelayMs}ms, ${revealDelayMs}ms`,
+                }}
+              >
+                {letter}
+              </div>
             </div>
-          </div>
-        );
-      })}
-    </h1>
+          );
+        })}
+      </h1>
+    </div>
   );
 };

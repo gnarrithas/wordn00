@@ -1,8 +1,8 @@
 // Each tile flips for FLIP_MS; tiles start one after another, but long words
 // squeeze the stagger so a whole row never takes much longer than a short one.
-export const FLIP_MS = 650;
-const MAX_STAGGER_MS = 325;
-const MAX_TOTAL_STAGGER_MS = 1625;
+export const FLIP_MS = 350;
+const MAX_STAGGER_MS = 120;
+const MAX_TOTAL_STAGGER_MS = 600;
 
 export const getRevealStaggerMs = (length: number) =>
   length <= 1
@@ -10,9 +10,9 @@ export const getRevealStaggerMs = (length: number) =>
     : Math.min(MAX_STAGGER_MS, MAX_TOTAL_STAGGER_MS / (length - 1));
 
 // Winning-row celebration: tiles hop one after another once the reveal ends.
-export const BOUNCE_MS = 1000;
-const MAX_BOUNCE_STAGGER_MS = 100;
-const MAX_TOTAL_BOUNCE_STAGGER_MS = 500;
+export const BOUNCE_MS = 700;
+const MAX_BOUNCE_STAGGER_MS = 60;
+const MAX_TOTAL_BOUNCE_STAGGER_MS = 300;
 
 export const getBounceStaggerMs = (length: number) =>
   length <= 1
