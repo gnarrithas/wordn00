@@ -46,18 +46,19 @@ export const Cell = ({
 }: Props) => {
   const isRevealing = revealDelayMs !== undefined;
   const classes = classnames(
-    "shrink-0 border-2 flex items-center justify-center mx-0.5 font-bold rounded",
+    "shrink-0 border-2 flex items-center justify-center mx-0.5 font-bold rounded-tile transition-colors duration-100",
     CELL_SIZES[size],
     status && STATUS_CLASSES[status],
     {
       "border-dashed": isDashed,
       "border-dotted": isDotted && !isDashed,
       "border-solid": !isDashed && !isDotted,
-      "bg-white dark:bg-wordle-night-bg border-wordle-empty dark:border-wordle-night-empty":
-        !status && !value,
-      "bg-white dark:bg-wordle-night-bg border-wordle-filled dark:border-wordle-night-filled":
-        !status && value,
-      "cursor-pointer select-none touch-manipulation hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500":
+      // Filled tiles: the border matches the fill unless it is dashed or
+      // dotted, which outline an empty box.
+      "bg-ui-tile border-ui-tile": !status && !value && !isDashed && !isDotted,
+      "bg-ui-tile border-ui-edge": !status && !value && (isDashed || isDotted),
+      "bg-ui-filled border-ui-filled": !status && value,
+      "cursor-pointer select-none touch-manipulation hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent":
         onClick,
       "cell-reveal": isRevealing,
     },

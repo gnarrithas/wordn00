@@ -58,7 +58,7 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Dialog.Overlay className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            <Dialog.Overlay className="fixed inset-0 bg-black/55 backdrop-blur-[5px] transition-opacity" />
           </Transition.Child>
 
           {/* This element is to trick the browser into centering the modal contents. */}
@@ -77,16 +77,16 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
             leaveFrom="opacity-100 translate-y-0 sm:scale-100"
             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
-            <div className="inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full sm:p-6">
+            <div className="inline-block align-bottom bg-ui-surface border-[0.5px] border-ui-border rounded-card px-4 pt-5 pb-4 text-left overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.5)] transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:w-full sm:p-6">
               <div>
                 <div>
                   <Dialog.Title
                     as="h3"
-                    className="text-center text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                    className="text-center text-lg leading-6 font-bold text-ui-text"
                   >
                     How To Play
                   </Dialog.Title>
-                  <div className="mt-2 space-y-3 text-sm text-gray-500 dark:text-gray-300">
+                  <div className="mt-2 space-y-3 text-sm font-normal text-ui-text">
                     <p>
                       Guess the hidden word. It has between {shortest} and{" "}
                       {longest} letters; guesses can have {MIN_WORD_LENGTH} to{" "}
@@ -103,9 +103,7 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                       never say which letters they are.
                     </p>
 
-                    <h4 className="pt-1 font-medium text-gray-900 dark:text-white">
-                      Examples
-                    </h4>
+                    <h4 className="pt-1 font-bold text-ui-text">Examples</h4>
 
                     <Example guess="WEARY" solution="TIGER">
                       With the word <strong>TIGER</strong>: no letter is in the

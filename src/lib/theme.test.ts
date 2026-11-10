@@ -40,5 +40,5 @@ test("ignores the system theme once the player picks one", () => {
   emit(true);
   expect(onChange).not.toHaveBeenCalled();
   expect(document.documentElement).not.toHaveClass("dark");
-  expect(themeColor()).toBe("#ffffff");
+  expect(themeColor()).toBe("#f2f2f4");
 });

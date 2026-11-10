@@ -26,11 +26,11 @@ const Toggle = ({ label, description, checked, onChange }: ToggleProps) => (
     className="flex items-center justify-between gap-4 py-3"
   >
     <div>
-      <Switch.Label className="text-sm font-medium text-gray-900 dark:text-white">
+      <Switch.Label className="text-sm font-semibold text-ui-text">
         {label}
       </Switch.Label>
       {description && (
-        <Switch.Description className="text-xs text-gray-500 dark:text-gray-400">
+        <Switch.Description className="text-xs font-normal text-ui-muted">
           {description}
         </Switch.Description>
       )}
@@ -39,10 +39,8 @@ const Toggle = ({ label, description, checked, onChange }: ToggleProps) => (
       checked={checked}
       onChange={onChange}
       className={`${
-        checked
-          ? "bg-wordle-correct dark:bg-wordle-night-correct"
-          : "bg-gray-300 dark:bg-gray-600"
-      } relative inline-flex shrink-0 h-6 w-11 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500 dark:focus-visible:ring-offset-gray-800`}
+        checked ? "bg-wordle-correct dark:bg-wordle-night-correct" : "bg-ui-key"
+      } relative inline-flex shrink-0 h-6 w-11 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent`}
     >
       <span
         aria-hidden="true"
@@ -79,7 +77,7 @@ export const SettingsModal = ({
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <Dialog.Overlay className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            <Dialog.Overlay className="fixed inset-0 bg-black/55 backdrop-blur-[5px] transition-opacity" />
           </Transition.Child>
 
           {/* This element is to trick the browser into centering the modal contents. */}
@@ -98,10 +96,10 @@ export const SettingsModal = ({
             leaveFrom="opacity-100 translate-y-0 sm:scale-100"
             leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
           >
-            <div className="relative inline-block align-bottom w-full bg-white dark:bg-gray-800 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:p-6">
+            <div className="relative inline-block align-bottom w-full bg-ui-surface border-[0.5px] border-ui-border rounded-card px-4 pt-5 pb-4 text-left overflow-hidden shadow-[0_12px_40px_rgba(0,0,0,0.5)] transform transition-all sm:my-8 sm:align-middle sm:max-w-sm sm:p-6">
               <button
                 type="button"
-                className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+                className="absolute top-2.5 right-2.5 flex items-center justify-center w-9 h-9 rounded-tile bg-ui-bg text-ui-text hover:bg-ui-tile focus:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent"
                 aria-label="Close"
                 onClick={handleClose}
               >
@@ -109,12 +107,12 @@ export const SettingsModal = ({
               </button>
               <Dialog.Title
                 as="h3"
-                className="text-center text-lg leading-6 font-medium text-gray-900 dark:text-white"
+                className="text-center text-lg leading-6 font-bold text-ui-text"
               >
                 Settings
               </Dialog.Title>
 
-              <div className="mt-4 divide-y divide-gray-200 dark:divide-gray-700">
+              <div className="mt-4 divide-y divide-ui-border">
                 <Toggle
                   label="Hard Mode"
                   description="Every guess must fit the scores of the guesses before it"

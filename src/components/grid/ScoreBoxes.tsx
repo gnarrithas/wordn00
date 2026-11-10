@@ -30,7 +30,7 @@ export const ScoreBoxes = ({
   return (
     <div
       className={classnames("flex shrink-0 pr-1.5", {
-        "sticky left-0 z-10 bg-white dark:bg-wordle-night-bg": isSticky,
+        "sticky left-0 z-10 bg-ui-bg": isSticky,
       })}
       role={score ? "img" : undefined}
       aria-label={
@@ -50,7 +50,7 @@ export const ScoreBoxes = ({
             key={key}
             aria-hidden="true"
             className={classnames(
-              "shrink-0 border-2 flex items-center justify-center mx-0.5 font-bold rounded tabular-nums",
+              "shrink-0 border-2 flex items-center justify-center mx-0.5 font-bold rounded-tile tabular-nums",
               // The same size as the letter tiles.
               CELL_SIZES[size],
               // Always in their colours; rows not guessed yet just have no

@@ -34,7 +34,7 @@ export const Logo = () => (
     </div>
     <span
       aria-hidden="true"
-      className="text-lg sm:text-2xl font-bold tracking-wider truncate"
+      className="font-display text-lg sm:text-xl truncate"
     >
       WORDN00
     </span>

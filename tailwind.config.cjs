@@ -4,7 +4,31 @@ module.exports = {
   content: ["./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      fontFamily: {
+        // Self-hosted through @fontsource (src/index.tsx); the CSP allows no
+        // font CDNs.
+        sans: ['"Source Sans 3"', "system-ui", "-apple-system", "sans-serif"],
+        display: ["Bungee", "sans-serif"],
+      },
+      borderRadius: {
+        tile: "5px",
+        card: "10px",
+      },
       colors: {
+        // Surfaces and text of the dark, card-based look; CSS variables
+        // (src/index.css) so each theme sets its own values.
+        ui: {
+          bg: "var(--ui-bg)",
+          surface: "var(--ui-surface)",
+          tile: "var(--ui-tile)",
+          filled: "var(--ui-filled)",
+          key: "var(--ui-key)",
+          text: "var(--ui-text)",
+          muted: "var(--ui-muted)",
+          border: "var(--ui-border)",
+          edge: "var(--ui-edge)",
+          accent: "var(--ui-accent)",
+        },
         // NYT Wordle palette plus a red for absent letters; "night-*" entries
         // are the dark-mode colours. The hint colours are CSS variables (src/index.css) so high contrast
         // mode can swap them.
@@ -12,15 +36,9 @@ module.exports = {
           correct: "var(--wordle-correct)",
           present: "var(--wordle-present)",
           absent: "var(--wordle-absent)",
-          empty: "#d3d6da", // empty tile border and unused keys
-          filled: "#878a8c", // border of a typed, unchecked tile
-          "night-bg": "#121213",
           "night-correct": "var(--wordle-night-correct)",
           "night-present": "var(--wordle-night-present)",
           "night-absent": "var(--wordle-night-absent)",
-          "night-empty": "#3a3a3c",
-          "night-filled": "#565758",
-          "night-key": "#818384",
         },
       },
     },

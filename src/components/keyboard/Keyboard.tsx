@@ -199,8 +199,9 @@ export const Keyboard = ({
   }, []);
 
   return (
-    <div>
-      <div className="flex justify-center mb-1 px-1">
+    // A raised panel, like the header card.
+    <div className="w-[calc(100%-8px)] sm:w-[calc(100%-20px)] max-w-[520px] mx-auto p-1 bg-ui-surface border-[0.5px] border-ui-border rounded-card">
+      <div className="flex justify-center">
         <Key value="Q" onClick={onClick} status={charStatuses["Q"]} />
         <Key value="W" onClick={onClick} status={charStatuses["W"]} />
         <Key value="E" onClick={onClick} status={charStatuses["E"]} />
@@ -212,7 +213,7 @@ export const Keyboard = ({
         <Key value="O" onClick={onClick} status={charStatuses["O"]} />
         <Key value="P" onClick={onClick} status={charStatuses["P"]} />
       </div>
-      <div className="flex justify-center mb-1 px-1">
+      <div className="flex justify-center">
         <Key value="A" onClick={onClick} status={charStatuses["A"]} />
         <Key value="S" onClick={onClick} status={charStatuses["S"]} />
         <Key value="D" onClick={onClick} status={charStatuses["D"]} />
@@ -223,7 +224,7 @@ export const Keyboard = ({
         <Key value="K" onClick={onClick} status={charStatuses["K"]} />
         <Key value="L" onClick={onClick} status={charStatuses["L"]} />
       </div>
-      <div className="flex justify-center px-1">
+      <div className="flex justify-center">
         <Key isWide value="ENTER" onClick={onClick}>
           Enter
         </Key>
@@ -238,7 +239,7 @@ export const Keyboard = ({
           Delete
         </Key>
       </div>
-      <div className="flex justify-center mt-1 px-1">
+      <div className="flex justify-center">
         <Key isWide value="HINT" onClick={onClick}>
           Hint
         </Key>

@@ -2,13 +2,22 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Colours the CSS animations below need; Tailwind classes cover the rest. */
+/* Surfaces and text (Tailwind's ui-* colours). Dark is the original card
+   look: a near-black page, raised cards, filled rounded tiles. Light mirrors
+   it with white cards on a pale grey page. */
 :root {
-  --page-bg: #ffffff;
-  --page-text: #000000;
-  --tile-filled-border: #878a8c; /* wordle-filled */
-  --scroll-track: #f1f5f9; /* slate-100 */
-  --scroll-thumb: #94a3b8; /* slate-400 */
+  --ui-bg: #f2f2f4;
+  --ui-surface: #ffffff;
+  --ui-tile: #e4e4e7;
+  --ui-filled: #d0d0d5;
+  --ui-key: #dcdce0;
+  --ui-text: #1f1f22;
+  --ui-muted: #6b6b70;
+  --ui-border: rgba(0, 0, 0, 0.1);
+  --ui-edge: rgba(0, 0, 0, 0.3); /* dashed and dotted tile outlines */
+  --ui-accent: #c9a800;
+  --scroll-track: var(--ui-tile);
+  --scroll-thumb: #a1a1aa;
 }
 
 /* Reveal Length outline: indigo, violet and sky (Tailwind 500s; 400s at night). */
@@ -25,12 +34,12 @@ html.dark {
 }
 
 :root {
-  --wordle-correct: #6aaa64;
+  --wordle-correct: #58a351;
   --wordle-present: #c9b458;
-  --wordle-absent: #d1605a;
-  --wordle-night-correct: #538d4e;
-  --wordle-night-present: #b59f3b;
-  --wordle-night-absent: #b4443f;
+  --wordle-absent: #d94a4a;
+  --wordle-night-correct: #58a351;
+  --wordle-night-present: #c9b458;
+  --wordle-night-absent: #d94a4a;
 }
 
 /* High contrast mode (src/lib/settings.ts): Wordle's orange and blue, with
@@ -46,10 +55,16 @@ html.high-contrast {
 
 html.dark {
   color-scheme: dark;
-  --page-bg: #121213; /* wordle-night-bg */
-  --page-text: #ffffff;
-  --tile-filled-border: #565758; /* wordle-night-filled */
-  --scroll-track: #1f2937; /* gray-800 */
+  --ui-bg: #121213;
+  --ui-surface: #1e1e1e;
+  --ui-tile: #2a2a2a;
+  --ui-filled: #3a3a3c;
+  --ui-key: #333336;
+  --ui-text: #cccccc;
+  --ui-muted: #888888;
+  --ui-border: rgba(255, 255, 255, 0.1);
+  --ui-edge: rgba(255, 255, 255, 0.28);
+  --ui-accent: #fbda03;
   --scroll-thumb: #565758;
 }
 
@@ -66,8 +81,15 @@ html.dark {
 }
 
 body {
-  background-color: var(--page-bg);
-  color: var(--page-text);
+  background-color: var(--ui-bg);
+  color: var(--ui-text);
+  font-family:
+    "Source Sans 3",
+    system-ui,
+    -apple-system,
+    sans-serif;
+  font-weight: 600;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* A control focused by mouse or touch passes Enter to the game (see
@@ -126,9 +148,9 @@ body {
 @keyframes cell-reveal-hide {
   from,
   to {
-    background-color: var(--page-bg);
-    border-color: var(--tile-filled-border);
-    color: var(--page-text);
+    background-color: var(--ui-filled);
+    border-color: var(--ui-filled);
+    color: var(--ui-text);
   }
 }
 

@@ -6,8 +6,8 @@ export type Theme = "light" | "dark";
 
 const STORAGE_KEY = "theme";
 const THEME_COLORS: Record<Theme, string> = {
-  light: "#ffffff",
-  dark: "#121213", // wordle-night-bg
+  light: "#f2f2f4", // --ui-bg
+  dark: "#121213", // --ui-bg
 };
 const DARK_QUERY = "(prefers-color-scheme: dark)";
 

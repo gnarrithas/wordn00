@@ -31,12 +31,13 @@ export const Key = ({
   onClick,
 }: Props) => {
   const classes = classnames(
-    "flex items-center justify-center h-14 rounded mx-0.5 text-xs font-bold cursor-pointer select-none touch-manipulation hover:brightness-95 active:brightness-90",
+    "flex items-center justify-center h-12 sm:h-14 rounded-tile m-0.5 font-bold uppercase cursor-pointer select-none touch-manipulation transition hover:brightness-110 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent",
     {
-      "flex-1 max-w-[40px]": !isWide && !isSpace,
-      "flex-[5] max-w-[208px]": isSpace,
-      "flex-[1.5] max-w-[65px]": isWide,
-      "bg-wordle-empty dark:bg-wordle-night-key dark:text-white": !status,
+      "flex-1 max-w-[46px] text-base": !isWide && !isSpace,
+      // Word labels are smaller than letters; SPACE is spaced out.
+      "flex-[5] max-w-[240px] text-xs tracking-[2px]": isSpace,
+      "flex-[1.5] max-w-[72px] text-xs": isWide,
+      "bg-ui-key text-ui-text": !status,
       "bg-wordle-absent dark:bg-wordle-night-absent text-white":
         status === "absent",
       "bg-wordle-correct dark:bg-wordle-night-correct text-white":

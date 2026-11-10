@@ -6,8 +6,7 @@ type Props = {
   message: string;
 };
 
-// Wordle-style toast: a compact, bold, high-contrast pill over the top of the
-// board, sized to its text.
+// A frosted pill over the header, sized to its text.
 export const Alert = ({ isOpen, message }: Props) => {
   return (
     <>
@@ -28,7 +27,7 @@ export const Alert = ({ isOpen, message }: Props) => {
       >
         <div
           aria-hidden="true"
-          className="fixed z-20 top-20 left-1/2 transform -translate-x-1/2 px-4 py-3 rounded bg-black text-white dark:bg-white dark:text-black text-sm font-bold whitespace-nowrap pointer-events-none"
+          className="fixed z-20 top-5 left-1/2 transform -translate-x-1/2 max-w-[calc(100vw-16px)] truncate px-7 py-2.5 rounded-full bg-white/80 dark:bg-[#1e1e1e]/80 backdrop-blur-md border-[0.5px] border-ui-edge text-ui-text text-sm font-semibold shadow-lg pointer-events-none"
         >
           {message}
         </div>

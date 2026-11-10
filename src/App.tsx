@@ -64,9 +64,14 @@ const ERROR_TOAST_MS = 2000;
 const SHARE_LABEL_MS = 2000;
 const LENGTH_TOAST_MS = 3000;
 
-// Header buttons that only exist in development builds.
-const HEADER_BUTTON_CLASSES =
-  "shrink-0 whitespace-nowrap mr-1 sm:mr-2 px-1.5 sm:px-2.5 py-1.5 text-xs font-medium rounded text-indigo-700 bg-indigo-100 hover:bg-indigo-200 dark:text-indigo-100 dark:bg-indigo-900 dark:hover:bg-indigo-800 dark:focus-visible:ring-offset-wordle-night-bg focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500";
+// Header controls: flat key-coloured buttons on the header card.
+const HEADER_CONTROL_CLASSES =
+  "shrink-0 flex items-center justify-center h-9 sm:h-10 rounded-tile bg-ui-key text-ui-text transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent";
+const HEADER_BUTTON_CLASSES = `${HEADER_CONTROL_CLASSES} whitespace-nowrap px-2.5 text-sm font-bold`;
+const HEADER_ICON_CLASSES = `${HEADER_CONTROL_CLASSES} w-9 sm:w-10`;
+// The green call to action (Share, Try again), with a darker bottom edge.
+const PRIMARY_BUTTON_CLASSES =
+  "px-6 py-2 text-sm font-bold rounded-tile text-white bg-wordle-correct shadow-[inset_0_-4px_0_rgba(0,0,0,0.15)] transition hover:brightness-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-ui-accent";
 
 type GameOutcome = "won" | "lost" | "skipped";
 
@@ -472,9 +477,9 @@ function Game() {
   };
 
   return (
-    <div className="app-height flex flex-col py-4 sm:py-8 max-w-7xl mx-auto sm:px-6 lg:px-8">
+    <div className="app-height flex flex-col pt-1.5 pb-2 sm:pt-3 sm:pb-4 max-w-7xl mx-auto sm:px-6 lg:px-8">
       <Alert message={toast.message} isOpen={toast.isOpen} />
-      <div className="flex w-full max-w-[28rem] mx-auto items-center mb-4 px-2 sm:px-0">
+      <div className="flex shrink-0 w-[calc(100%-8px)] sm:w-[calc(100%-20px)] max-w-[500px] mx-auto items-center gap-1.5 h-[50px] sm:h-14 mb-3 px-2 sm:px-2.5 bg-ui-surface border-[0.5px] border-ui-border rounded-card">
         <Logo />
         <button
           type="button"
@@ -495,7 +500,7 @@ function Game() {
         )}
         <button
           type="button"
-          className="shrink-0 mr-1 sm:mr-2"
+          className={HEADER_ICON_CLASSES}
           aria-label="How to play"
           onClick={() => setIsInfoModalOpen(true)}
         >
@@ -503,14 +508,14 @@ function Game() {
         </button>
         <button
           type="button"
-          className="shrink-0"
+          className={HEADER_ICON_CLASSES}
           aria-label="Settings"
           onClick={() => setIsSettingsModalOpen(true)}
         >
           <CogIcon className="h-5 w-5 sm:h-6 sm:w-6" />
         </button>
       </div>
-      <p className="text-center text-sm text-gray-500 dark:text-gray-400">
+      <p className="text-center text-sm text-ui-muted">
         Total letters used: <span className="font-bold">{lettersUsed}</span>
       </p>
       <Grid
@@ -529,7 +534,7 @@ function Game() {
       {/* Always rendered so the board and keyboard do not jump when it appears. */}
       <button
         type="button"
-        className={`${isEndAnimationDone ? "" : "invisible "}shrink-0 mx-auto px-4 py-2 text-sm font-medium rounded text-white bg-wordle-correct hover:bg-wordle-night-correct dark:bg-wordle-night-correct dark:hover:bg-wordle-correct focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-wordle-correct dark:focus-visible:ring-offset-wordle-night-bg`}
+        className={`${isEndAnimationDone ? "" : "invisible "}shrink-0 mx-auto ${PRIMARY_BUTTON_CLASSES}`}
         onClick={onShare}
         disabled={!isEndAnimationDone}
       >
@@ -598,9 +603,7 @@ function App() {
         <Logo />
       </div>
       {loadState === "loading" ? (
-        <p className="text-sm text-gray-500 dark:text-gray-400">
-          Loading words…
-        </p>
+        <p className="text-sm text-ui-muted">Loading words…</p>
       ) : (
         <>
           <p role="alert" className="text-sm font-bold">
@@ -608,7 +611,7 @@ function App() {
           </p>
           <button
             type="button"
-            className="px-4 py-2 text-sm font-medium rounded text-white bg-wordle-correct hover:bg-wordle-night-correct dark:bg-wordle-night-correct dark:hover:bg-wordle-correct focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-wordle-correct dark:focus-visible:ring-offset-wordle-night-bg"
+            className={PRIMARY_BUTTON_CLASSES}
             onClick={load}
           >
             Try again
