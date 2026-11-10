@@ -1,21 +1,19 @@
-// A 2×2 square, read left to right and top to bottom: a white W, then the
-// three hint colours. One black line outlines the square and divides its
-// tiles. The title follows it.
+// A 2×2 square, read left to right and top to bottom: a white tile, then the
+// three hint colours, all lettered in black. One black line outlines the
+// square and divides its tiles. The title follows it.
 const TILES = [
-  { letter: "W", classes: "bg-white text-black border-r-2 border-b-2" },
+  { letter: "W", classes: "bg-white border-r-2 border-b-2" },
   {
     letter: "N",
-    classes:
-      "bg-wordle-correct dark:bg-wordle-night-correct text-white border-b-2",
+    classes: "bg-wordle-correct dark:bg-wordle-night-correct border-b-2",
   },
   {
     letter: "0",
-    classes:
-      "bg-wordle-present dark:bg-wordle-night-present text-white border-r-2",
+    classes: "bg-wordle-present dark:bg-wordle-night-present border-r-2",
   },
   {
     letter: "0",
-    classes: "bg-wordle-absent dark:bg-wordle-night-absent text-white",
+    classes: "bg-wordle-absent dark:bg-wordle-night-absent",
   },
 ];
 
@@ -28,7 +26,7 @@ export const Logo = () => (
       {TILES.map(({ letter, classes }, i) => (
         <div
           key={i}
-          className={`w-5 h-5 text-xs sm:w-6 sm:h-6 sm:text-sm flex items-center justify-center font-bold border-black dark:border-white ${classes}`}
+          className={`w-5 h-5 text-xs sm:w-6 sm:h-6 sm:text-sm flex items-center justify-center font-bold text-black border-black dark:border-white ${classes}`}
         >
           {letter}
         </div>
