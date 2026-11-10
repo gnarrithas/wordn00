@@ -1,7 +1,7 @@
 import classnames from "classnames";
 import { FLIP_MS, getRevealStaggerMs, SCORE_BOXES } from "../../lib/reveal";
 import { Score } from "../../lib/score";
-import { STATUS_CLASSES } from "./Cell";
+import { CELL_SIZES, STATUS_CLASSES } from "./Cell";
 
 type Props = {
   // Omit for the empty boxes of rows not guessed yet.
@@ -16,12 +16,6 @@ type Props = {
 };
 
 const ORDER: (keyof Score)[] = ["correct", "present", "absent"];
-
-// Wide enough for two digits; as tall as the letter tiles.
-const SIZES = {
-  md: "w-9 h-11 text-lg sm:w-11 sm:h-14 sm:text-2xl",
-  sm: "w-8 h-10 text-lg",
-};
 
 // A guess's score, shown before its letters so every row's score lines up.
 // Sticky, so it stays in view while a long row is scrolled sideways.
@@ -57,7 +51,8 @@ export const ScoreBoxes = ({
             aria-hidden="true"
             className={classnames(
               "shrink-0 border-2 flex items-center justify-center mx-0.5 font-bold rounded tabular-nums",
-              SIZES[size],
+              // The same size as the letter tiles.
+              CELL_SIZES[size],
               // Always in their colours; rows not guessed yet just have no
               // digits, and the dashed row is faded.
               STATUS_CLASSES[key],

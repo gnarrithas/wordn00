@@ -20,7 +20,7 @@ type Props = {
 };
 
 export const CELL_SIZES = {
-  md: "w-11 h-11 text-xl sm:w-14 sm:h-14 sm:text-2xl",
+  md: "w-10 h-10 text-xl sm:w-14 sm:h-14 sm:text-2xl",
   sm: "w-10 h-10 text-xl",
 };
 
