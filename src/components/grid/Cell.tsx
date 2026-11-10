@@ -1,5 +1,6 @@
 import { CharStatus } from "../../lib/statuses";
 import classnames from "classnames";
+import { CSSProperties } from "react";
 import { FLIP_MS } from "../../lib/reveal";
 
 type Props = {
@@ -7,6 +8,8 @@ type Props = {
   status?: CharStatus;
   // When set, the tile plays the flip reveal starting after this many ms.
   revealDelayMs?: number;
+  // The colour shown before the flip turns it over; omit for a typed tile.
+  fromStatus?: CharStatus;
   // "sm" for the smaller example tiles in the help text.
   size?: "md" | "sm";
   // Dashed border for the extra box that hints the row can grow.
@@ -38,6 +41,7 @@ export const Cell = ({
   value,
   status,
   revealDelayMs,
+  fromStatus,
   size = "md",
   isDashed = false,
   isDotted = false,
@@ -64,10 +68,14 @@ export const Cell = ({
     },
   );
   const style = isRevealing
-    ? {
+    ? ({
         animationDuration: `${FLIP_MS}ms, ${FLIP_MS / 2}ms`,
         animationDelay: `${revealDelayMs}ms, ${revealDelayMs}ms`,
-      }
+        ...(fromStatus && {
+          "--reveal-from-bg": `var(--wordle-${fromStatus})`,
+          "--reveal-from-text": "#ffffff",
+        }),
+      } as CSSProperties)
     : undefined;
   const content =
     value ??

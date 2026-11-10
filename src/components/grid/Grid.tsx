@@ -10,8 +10,9 @@ type Props = {
   currentGuess: string;
   solution: string;
   maxGuesses: number;
-  isGameWon: boolean;
   isGameOver: boolean;
+  // End of game: the tiles flip over to their Wordle colours, then stay so.
+  boardReveal?: "flipping" | "revealed";
   // Reveal Length: outline the guesses that have the answer's length.
   highlightLength?: boolean;
   // Dev only: letters shown faded in the input row's empty boxes.
@@ -28,8 +29,8 @@ export const Grid = ({
   currentGuess,
   solution,
   maxGuesses,
-  isGameWon,
   isGameOver,
+  boardReveal,
   highlightLength = false,
   hint,
   knownLength,
@@ -111,7 +112,7 @@ export const Grid = ({
         tabIndex={0}
         role="region"
         aria-label="Board"
-        // Top padding leaves room for winning tiles to bounce without clipping.
+        // Top padding keeps the first row clear of the header.
         className="board-scroll relative min-h-0 overflow-auto pt-6"
       >
         {/* px-1 leaves room for the Reveal Length outline around a row. */}
@@ -122,7 +123,8 @@ export const Grid = ({
               guess={guess}
               solution={solution}
               revealDelayMs={i >= firstNewRow ? 0 : undefined}
-              isWinningRow={isGameWon && i === guesses.length - 1}
+              isRevealed={boardReveal !== undefined}
+              isFlipping={boardReveal === "flipping"}
               isLengthMatch={
                 highlightLength &&
                 guess !== solution &&

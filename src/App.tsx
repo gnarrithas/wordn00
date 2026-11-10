@@ -51,8 +51,9 @@ import { getTheme, setTheme, Theme, watchSystemTheme } from "./lib/theme";
 import { copyText, countLetters, getShareText, getSiteUrl } from "./lib/share";
 import { getWinMessage } from "./lib/winMessage";
 import {
+  FLIP_MS,
+  getBoardFlipStartMs,
   getGuessRevealMs,
-  getRowBounceMs,
   prefersReducedMotion,
 } from "./lib/reveal";
 import { cycleMark, Marks } from "./lib/marks";
@@ -144,10 +145,13 @@ function Game() {
   const [theme, setThemeState] = useState<Theme>(getTheme);
   useEffect(() => watchSystemTheme(setThemeState), []);
   const [shareLabel, setShareLabel] = useState("Share");
-  // Share and the answer toast wait until the board's final animations end.
-  const [isEndAnimationDone, setIsEndAnimationDone] =
-    useState(isRestoredGameOver);
-  const [endAnimationMs, setEndAnimationMs] = useState(0);
+  // End of game: the board shows the player's marks, flips over, then shows
+  // every letter's Wordle colour. Share waits until it has.
+  const [boardPhase, setBoardPhase] = useState<
+    "marks" | "flipping" | "revealed"
+  >(isRestoredGameOver ? "revealed" : "marks");
+  const isEndAnimationDone = boardPhase === "revealed";
+  const isBoardTurning = boardPhase !== "marks";
   // One toast at a time; a closing toast keeps its text while it fades out.
   const [toast, setToast] = useState({ message: "", isOpen: false });
   const toastTimerRef = useRef<number>();
@@ -238,15 +242,12 @@ function Game() {
     });
   };
 
-  // Cheer as the winning row finishes flipping, while its tiles bounce.
+  // Cheer once the winning score is in; the board flips a little later.
   useEffect(() => {
     if (!isGameWon || skipEndToastRef.current) {
       return;
     }
-    const winningGuess = guesses[guesses.length - 1];
-    const revealMs = prefersReducedMotion()
-      ? 0
-      : getGuessRevealMs(winningGuess.length, true);
+    const revealMs = prefersReducedMotion() ? 0 : getGuessRevealMs();
     const message = getWinMessage(guesses.length, maxGuesses);
     const timer = setTimeout(() => showToast(message, WIN_TOAST_MS), revealMs);
     return () => clearTimeout(timer);
@@ -270,33 +271,42 @@ function Game() {
       setRevealedCount(guesses.length);
       return;
     }
-    const lastGuess = guesses[guesses.length - 1];
     const timer = setTimeout(
       () => setRevealedCount(guesses.length),
-      prefersReducedMotion()
-        ? 0
-        : getGuessRevealMs(lastGuess.length, lastGuess === solution),
+      prefersReducedMotion() ? 0 : getGuessRevealMs(),
     );
     return () => clearTimeout(timer);
-  }, [guesses, revealedCount, solution]);
+  }, [guesses, revealedCount]);
 
+  // The end-of-game board flip, as in Word500. A finished game restored from
+  // storage is already turned over.
   useEffect(() => {
     if (!isGameOver) {
-      setIsEndAnimationDone(false);
+      setBoardPhase("marks");
       return;
     }
-    const timer = setTimeout(
-      () => setIsEndAnimationDone(true),
-      prefersReducedMotion() ? 0 : endAnimationMs,
+    if (skipEndToastRef.current || prefersReducedMotion()) {
+      setBoardPhase("revealed");
+      return;
+    }
+    const startMs = getBoardFlipStartMs(isGameWon);
+    const flipTimer = setTimeout(() => setBoardPhase("flipping"), startMs);
+    const doneTimer = setTimeout(
+      () => setBoardPhase("revealed"),
+      startMs + FLIP_MS,
     );
-    return () => clearTimeout(timer);
-  }, [isGameOver, endAnimationMs]);
+    return () => {
+      clearTimeout(flipTimer);
+      clearTimeout(doneTimer);
+    };
+  }, [isGameOver, isGameWon]);
 
+  // The answer appears as the board turns over.
   useEffect(() => {
-    if (isAnswerRevealed && isEndAnimationDone && !skipEndToastRef.current) {
+    if (isAnswerRevealed && isBoardTurning && !skipEndToastRef.current) {
       showToast(`The word was ${revealedAnswer}`, ANSWER_TOAST_MS);
     }
-  }, [isAnswerRevealed, isEndAnimationDone, revealedAnswer, showToast]);
+  }, [isAnswerRevealed, isBoardTurning, revealedAnswer, showToast]);
 
   const onChar = (value: string) => {
     if (isGameOver) {
@@ -350,14 +360,10 @@ function Game() {
 
     if (guess === solution) {
       trackGameEnd("won", guesses.length + 1);
-      setEndAnimationMs(
-        getGuessRevealMs(guess.length, true) + getRowBounceMs(guess.length),
-      );
       setIsGameWon(true);
     } else if (guesses.length + 1 >= maxGuesses) {
       trackGameEnd("lost", guesses.length + 1);
-      // Out of guesses: the answer toast follows the last row's reveal.
-      setEndAnimationMs(getGuessRevealMs(guess.length));
+      // Out of guesses: the board turns over with the answer toast.
       setRevealedAnswer(solution);
       setIsAnswerRevealed(true);
     } else if (
@@ -373,7 +379,7 @@ function Game() {
             `Right length! The word has ${solution.length} letters`,
             LENGTH_TOAST_MS,
           ),
-        prefersReducedMotion() ? 0 : getGuessRevealMs(guess.length),
+        prefersReducedMotion() ? 0 : getGuessRevealMs(),
       );
     }
   };
@@ -523,7 +529,7 @@ function Game() {
         currentGuess={currentGuess}
         solution={solution}
         maxGuesses={maxGuesses}
-        isGameWon={isGameWon}
+        boardReveal={boardPhase === "marks" ? undefined : boardPhase}
         isGameOver={isGameOver}
         highlightLength={settings.revealLength}
         hint={import.meta.env.DEV && isSolutionShown ? solution : undefined}

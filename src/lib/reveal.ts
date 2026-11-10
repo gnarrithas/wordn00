@@ -9,19 +9,6 @@ export const getRevealStaggerMs = (length: number) =>
     ? 0
     : Math.min(MAX_STAGGER_MS, MAX_TOTAL_STAGGER_MS / (length - 1));
 
-// Winning-row celebration: tiles hop one after another once the reveal ends.
-export const BOUNCE_MS = 700;
-const MAX_BOUNCE_STAGGER_MS = 60;
-const MAX_TOTAL_BOUNCE_STAGGER_MS = 300;
-
-export const getBounceStaggerMs = (length: number) =>
-  length <= 1
-    ? 0
-    : Math.min(
-        MAX_BOUNCE_STAGGER_MS,
-        MAX_TOTAL_BOUNCE_STAGGER_MS / (length - 1),
-      );
-
 // Time from a row appearing until its last tile has finished flipping.
 export const getRowRevealMs = (length: number) =>
   Math.max(0, length - 1) * getRevealStaggerMs(length) + FLIP_MS;
@@ -29,14 +16,16 @@ export const getRowRevealMs = (length: number) =>
 // A guess's score: three boxes, flipped like tiles.
 export const SCORE_BOXES = 3;
 
-// Time from a guess appearing until it is fully revealed: its score boxes
-// flip, and a winning guess also flips its letters green alongside.
-export const getGuessRevealMs = (length: number, isWin = false) =>
-  Math.max(getRowRevealMs(SCORE_BOXES), isWin ? getRowRevealMs(length) : 0);
+// Time from a guess appearing until its score boxes have flipped in.
+export const getGuessRevealMs = () => getRowRevealMs(SCORE_BOXES);
 
-// Time from the winning row's reveal ending until its last tile stops bouncing.
-export const getRowBounceMs = (length: number) =>
-  Math.max(0, length - 1) * getBounceStaggerMs(length) + BOUNCE_MS;
+// End of game, as in Word500: once the last score is in (and, after a win,
+// the cheer has been up this long), every tile on the board flips at once to
+// its Wordle colour.
+export const WIN_PAUSE_MS = 1500;
+
+export const getBoardFlipStartMs = (isWin: boolean) =>
+  getGuessRevealMs() + (isWin ? WIN_PAUSE_MS : 0);
 
 export const prefersReducedMotion = () =>
   window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;

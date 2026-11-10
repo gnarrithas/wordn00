@@ -124,9 +124,10 @@ body {
 }
 
 /* Tile reveal: flip shut, swap to the result colour while edge-on, flip open.
-   cell-reveal-hide holds the unrevealed colours for the first half of the flip
-   (and, via backwards fill, during the stagger delay); once it ends the tile's
-   own status colours apply. */
+   cell-reveal-hide holds the colours from before the flip (the player's mark,
+   passed in --reveal-from-bg/-text, else a typed tile's) for the first half
+   of the flip and, via backwards fill, during any delay; once it ends the
+   tile's own status colours apply. */
 .cell-reveal {
   animation-name: cell-reveal-flip, cell-reveal-hide;
   animation-timing-function: ease-in-out, linear;
@@ -148,9 +149,9 @@ body {
 @keyframes cell-reveal-hide {
   from,
   to {
-    background-color: var(--ui-filled);
-    border-color: var(--ui-filled);
-    color: var(--ui-text);
+    background-color: var(--reveal-from-bg, var(--ui-filled));
+    border-color: var(--reveal-from-bg, var(--ui-filled));
+    color: var(--reveal-from-text, var(--ui-text));
   }
 }
 
@@ -166,33 +167,6 @@ body {
   from,
   to {
     color: transparent;
-  }
-}
-
-/* Winning row: each tile hops and settles after the reveal finishes. */
-.cell-bounce {
-  animation-name: cell-bounce;
-}
-
-@keyframes cell-bounce {
-  0%,
-  20% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-20px);
-  }
-  50% {
-    transform: translateY(2px);
-  }
-  60% {
-    transform: translateY(-10px);
-  }
-  80% {
-    transform: translateY(1px);
-  }
-  100% {
-    transform: translateY(0);
   }
 }
 
@@ -282,7 +256,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .cell-reveal,
   .score-reveal,
-  .cell-bounce,
   .length-match::before,
   .length-match::after {
     animation: none;

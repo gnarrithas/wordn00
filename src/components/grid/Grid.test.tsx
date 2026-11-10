@@ -8,7 +8,6 @@ const renderGrid = (guessCount: number, maxGuesses: number) =>
       currentGuess=""
       solution="ZYXWVUT"
       maxGuesses={maxGuesses}
-      isGameWon={false}
       isGameOver={false}
     />,
   );
@@ -27,7 +26,6 @@ const renderOver = () =>
       currentGuess=""
       solution="ZYXWVUT"
       maxGuesses={8}
-      isGameWon={false}
       isGameOver
     />,
   );
@@ -85,7 +83,6 @@ describe("known length markers", () => {
         currentGuess={currentGuess}
         solution={solution}
         maxGuesses={9}
-        isGameWon={false}
         isGameOver={false}
         knownLength={knownLength}
       />,

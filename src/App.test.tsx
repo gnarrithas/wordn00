@@ -754,5 +754,29 @@ test("a won game's tiles are green and no longer markable", async () => {
   submit("CAT");
   const row = screen.getByRole("group", { name: "Guess: CAT" });
   expect(within(row).queryAllByRole("button")).toHaveLength(0);
-  expect(within(row).getByRole("img", { name: "C correct" })).toBeInTheDocument();
+  act(() => {
+    vi.runOnlyPendingTimers();
+  });
+  expect(
+    within(row).getByRole("img", { name: "C correct" }),
+  ).toBeInTheDocument();
+});
+
+test("the end of a game turns the whole board to its Wordle colours", async () => {
+  await renderGame();
+  submit("ACT");
+  // Marked as the player likes; the reveal replaces the marks.
+  const earlier = screen.getByRole("group", { name: "Guess: ACT" });
+  mouseClick(within(earlier).getByRole("button", { name: "T" }));
+  submit("CAT");
+  expect(
+    within(earlier).getByRole("img", { name: "T absent" }),
+  ).toBeInTheDocument();
+  expect(within(earlier).queryByRole("img", { name: "A present" })).toBeNull();
+  act(() => {
+    vi.runOnlyPendingTimers();
+  });
+  for (const name of ["A present", "C present", "T correct"]) {
+    expect(within(earlier).getByRole("img", { name })).toBeInTheDocument();
+  }
 });

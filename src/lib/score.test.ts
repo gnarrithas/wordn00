@@ -1,4 +1,4 @@
-import { getScore, isSameScore } from "./score";
+import { getGuessStatuses, getScore, isSameScore } from "./score";
 
 const score = (guess: string, solution: string) => {
   const { correct, present, absent } = getScore(guess, solution);
@@ -42,4 +42,40 @@ test("isSameScore compares all three counts", () => {
   expect(
     isSameScore(getScore("NACRE", "CRANE"), getScore("NACRE", "CRATE")),
   ).toBe(false);
+});
+
+test("getGuessStatuses colours each letter as in Wordle", () => {
+  expect(getGuessStatuses("WEARY", "TIGER")).toEqual([
+    "absent",
+    "present",
+    "absent",
+    "present",
+    "absent",
+  ]);
+  // A letter in place claims its copy before an earlier misplaced one.
+  expect(getGuessStatuses("EERIE", "THREE")).toEqual([
+    "present",
+    "absent",
+    "correct",
+    "absent",
+    "correct",
+  ]);
+});
+
+test("getGuessStatuses agrees with getScore for any lengths", () => {
+  const pairs = [
+    ["CAT", "CATALOG"],
+    ["CATALOG", "CAT"],
+    ["LEVEL", "EEL"],
+    ["BANANA", "ANNAL"],
+  ];
+  for (const [guess, solution] of pairs) {
+    const statuses = getGuessStatuses(guess, solution);
+    const count = (s: string) => statuses.filter((x) => x === s).length;
+    expect({
+      correct: count("correct"),
+      present: count("present"),
+      absent: count("absent"),
+    }).toEqual(getScore(guess, solution));
+  }
 });
