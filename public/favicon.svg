@@ -1,0 +1,5 @@
+<!-- A correct tile as on the board at sm+: 64px square, 30px bold letter, 4px radius. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="4" fill="#6aaa64"/>
+  <text x="32" y="32" text-anchor="middle" dominant-baseline="central" font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" font-size="30" font-weight="700" fill="#ffffff">W</text>
+</svg>

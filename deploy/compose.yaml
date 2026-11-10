@@ -1,0 +1,89 @@
+# The game behind Caddy (TLS), with self-hosted Umami analytics in Postgres.
+# Run from this directory so compose picks up deploy/.env:
+#
+#   cd deploy && cp .env.example .env   # then fill it in
+#   docker compose up -d --build
+#
+# See README.md for first-time Umami setup. Images are pinned by digest.
+name: wordn00
+
+services:
+  caddy:
+    image: caddy:2-alpine@sha256:78bd35025c7ba85961dd149ae670315129954e77abe2383ac47c89106b35ade9
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:?set SITE_ADDRESS in deploy/.env}
+      UMAMI_WEBSITE_ID: ${UMAMI_WEBSITE_ID:-}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - wordle
+      - umami
+
+  wordle:
+    build:
+      context: ..
+      dockerfile: deploy/Dockerfile
+      secrets:
+        - SOLUTIONS_SHUFFLE_SEED
+      # The last day the image publishes a word for; rebuild daily
+      # with WORDS_DAY=$(date -u +%F), see README.md.
+      args:
+        WORDS_DAY: ${WORDS_DAY:-}
+    image: wordn00:latest
+    restart: unless-stopped
+
+  umami:
+    image: ghcr.io/umami-software/umami:3.4.1@sha256:e69d1a7932e9dab0fc523edc7be1f3a53f3c261f57856fc2167ae74a8fc022e8
+    restart: unless-stopped
+    init: true
+    environment:
+      DATABASE_URL: postgresql://umami:${UMAMI_DB_PASSWORD:?set UMAMI_DB_PASSWORD in deploy/.env}@db:5432/umami
+      APP_SECRET: ${UMAMI_APP_SECRET:?set UMAMI_APP_SECRET in deploy/.env}
+      # Only trust the header Caddy overwrites; see Caddyfile.
+      CLIENT_IP_HEADER: x-real-ip
+      DISABLE_TELEMETRY: "1"
+    # The dashboard is reachable only from the host, e.g. through
+    # `ssh -L 3000:127.0.0.1:3000 <server>`.
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3000/api/heartbeat || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  db:
+    image: postgres:17-alpine@sha256:3540c0362c809df084ffac0ae69fe794515f9de92692f02178bcdce0ef0302ac
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: umami
+      POSTGRES_USER: umami
+      POSTGRES_PASSWORD: ${UMAMI_DB_PASSWORD:?set UMAMI_DB_PASSWORD in deploy/.env}
+    volumes:
+      - umami-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U umami -d umami"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# Build-time only: the seed that shuffles the solutions into daily order.
+secrets:
+  SOLUTIONS_SHUFFLE_SEED:
+    environment: SOLUTIONS_SHUFFLE_SEED
+
+volumes:
+  caddy-data:
+  caddy-config:
+  umami-db:

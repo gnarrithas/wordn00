@@ -1,0 +1,265 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Colours the CSS animations below need; Tailwind classes cover the rest. */
+:root {
+  --page-bg: #ffffff;
+  --page-text: #000000;
+  --tile-filled-border: #878a8c; /* wordle-filled */
+  --logo-start-bg: #787c7e; /* wordle-absent */
+  --scroll-track: #f1f5f9; /* slate-100 */
+  --scroll-thumb: #94a3b8; /* slate-400 */
+}
+
+/* Reveal Length outline: indigo, violet and sky (Tailwind 500s; 400s at night). */
+:root {
+  --length-match-1: #6366f1;
+  --length-match-2: #8b5cf6;
+  --length-match-3: #0ea5e9;
+}
+
+html.dark {
+  --length-match-1: #818cf8;
+  --length-match-2: #a78bfa;
+  --length-match-3: #38bdf8;
+}
+
+:root {
+  --wordle-correct: #6aaa64;
+  --wordle-present: #c9b458;
+  --wordle-night-correct: #538d4e;
+  --wordle-night-present: #b59f3b;
+}
+
+/* High contrast mode (src/lib/settings.ts): Wordle's orange and blue, the
+   same in both themes. */
+html.high-contrast {
+  --wordle-correct: #f5793a;
+  --wordle-present: #85c0f9;
+  --wordle-night-correct: #f5793a;
+  --wordle-night-present: #85c0f9;
+}
+
+html.dark {
+  color-scheme: dark;
+  --page-bg: #121213; /* wordle-night-bg */
+  --page-text: #ffffff;
+  --tile-filled-border: #565758; /* wordle-night-filled */
+  --logo-start-bg: #3a3a3c; /* wordle-night-absent */
+  --scroll-track: #1f2937; /* gray-800 */
+  --scroll-thumb: #565758;
+}
+
+/* Dynamic viewport height keeps the keyboard above mobile browser toolbars
+   (iOS Safari); older browsers fall back to 100vh. */
+.app-height {
+  height: 100vh;
+}
+
+@supports (height: 100dvh) {
+  .app-height {
+    height: 100dvh;
+  }
+}
+
+body {
+  background-color: var(--page-bg);
+  color: var(--page-text);
+}
+
+/* A control focused by mouse or touch passes Enter to the game (see
+   Keyboard.tsx), so it should not look keyboard-focused when the player
+   starts typing. */
+[data-mouse-focus]:focus-visible {
+  /* !important: must beat Tailwind's focus-visible:ring-* utilities. */
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Custom-styled scrollbars bypass macOS overlay scrollbars, so they stay
+   visible whenever the board overflows instead of only while scrolling. */
+.board-scroll::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 8px;
+  height: 8px;
+}
+
+.board-scroll::-webkit-scrollbar-track {
+  background-color: var(--scroll-track);
+  border-radius: 4px;
+}
+
+.board-scroll::-webkit-scrollbar-thumb {
+  background-color: var(--scroll-thumb);
+  border-radius: 4px;
+}
+
+.board-scroll::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
+
+/* Tile reveal: flip shut, swap to the result colour while edge-on, flip open.
+   cell-reveal-hide holds the unrevealed colours for the first half of the flip
+   (and, via backwards fill, during the stagger delay); once it ends the tile's
+   own status colours apply. */
+.cell-reveal {
+  animation-name: cell-reveal-flip, cell-reveal-hide;
+  animation-timing-function: ease-in-out, linear;
+  animation-fill-mode: backwards, backwards;
+}
+
+@keyframes cell-reveal-flip {
+  0% {
+    transform: rotateX(0deg);
+  }
+  50% {
+    transform: rotateX(90deg);
+  }
+  100% {
+    transform: rotateX(0deg);
+  }
+}
+
+@keyframes cell-reveal-hide {
+  from,
+  to {
+    background-color: var(--page-bg);
+    border-color: var(--tile-filled-border);
+    color: var(--page-text);
+  }
+}
+
+/* Logo tiles flip like guesses, but start grey ("absent") rather than blank. */
+.logo-reveal {
+  animation-name: cell-reveal-flip, logo-reveal-hide;
+  animation-timing-function: ease-in-out, linear;
+  animation-fill-mode: backwards, backwards;
+}
+
+@keyframes logo-reveal-hide {
+  from,
+  to {
+    background-color: var(--logo-start-bg);
+  }
+}
+
+/* Winning row: each tile hops and settles after the reveal finishes. */
+.cell-bounce {
+  animation-name: cell-bounce;
+}
+
+@keyframes cell-bounce {
+  0%,
+  20% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  50% {
+    transform: translateY(2px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
+  80% {
+    transform: translateY(1px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Reveal Length: a gradient outline around a guess of the answer's length.
+   ::before is the outline (a padded gradient with its middle masked out),
+   slowly drifting; ::after is a one-off ripple. Rows that just arrived
+   (.length-match-enter) wait for --length-match-delay, the end of the tile
+   flips, then pop the outline in. Box shadows rather than transforms keep
+   the ripple from growing the board's scroll area.
+   Geometry: a 3px outline 3px clear of the tiles on every side. Tiles keep
+   a 2px side margin inside the row, hence the smaller horizontal inset; the
+   row's 9px vertical margins (which collapse with the 4px between rows)
+   keep 3px between the outline and the rows above and below. */
+.length-match {
+  position: relative;
+  margin-top: 9px;
+  margin-bottom: 9px;
+}
+
+.length-match::before,
+.length-match::after {
+  content: "";
+  position: absolute;
+  inset: -6px -4px;
+  border-radius: 10px;
+  pointer-events: none;
+}
+
+.length-match::before {
+  padding: 3px;
+  background: linear-gradient(
+      90deg,
+      var(--length-match-1),
+      var(--length-match-2),
+      var(--length-match-3),
+      var(--length-match-1)
+    )
+    0 0 / 300% 100%;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: length-match-drift 6s linear infinite;
+}
+
+.length-match-enter::before {
+  animation:
+    length-match-pop 500ms cubic-bezier(0.34, 1.56, 0.64, 1)
+      var(--length-match-delay, 0ms) both,
+    length-match-drift 6s linear infinite;
+}
+
+.length-match-enter::after {
+  animation: length-match-ripple 900ms ease-out var(--length-match-delay, 0ms)
+    both;
+}
+
+@keyframes length-match-drift {
+  to {
+    background-position: 150% 0;
+  }
+}
+
+@keyframes length-match-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.94);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes length-match-ripple {
+  from {
+    box-shadow: 0 0 0 0 var(--length-match-2);
+    opacity: 0.7;
+  }
+  to {
+    box-shadow: 0 0 0 10px var(--length-match-2);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cell-reveal,
+  .logo-reveal,
+  .cell-bounce,
+  .length-match::before,
+  .length-match::after {
+    animation: none;
+  }
+}

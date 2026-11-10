@@ -1,0 +1,10 @@
+# BuildKit reads this file because it sits next to deploy/Dockerfile;
+# paths are relative to the build context (the repository root).
+.git
+**/node_modules
+build
+coverage
+deploy/README.md
+.env*
+*.log
+.DS_Store

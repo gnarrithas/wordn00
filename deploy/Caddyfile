@@ -1,0 +1,35 @@
+# Public entry point: TLS, the game, and the two Umami routes the tracker
+# needs. Everything else of Umami (dashboard, login, API) stays private.
+# SITE_ADDRESS and UMAMI_WEBSITE_ID come from deploy/.env via compose.
+
+{$SITE_ADDRESS} {
+	# Ignored by browsers over plain HTTP (e.g. SITE_ADDRESS=:80 locally).
+	header Strict-Transport-Security "max-age=31536000"
+
+	# The app reads this to decide whether to load the tracker. An empty id
+	# leaves analytics off.
+	handle /stats/config.json {
+		header Content-Type application/json
+		header Cache-Control no-cache
+		respond `{"websiteId":"{$UMAMI_WEBSITE_ID}"}` 200
+	}
+
+	# Same-origin tracker and collection endpoint. Umami takes the visitor's
+	# address from X-Real-IP only (CLIENT_IP_HEADER), which is overwritten
+	# here so clients cannot spoof it.
+	@tracker path /stats/script.js /stats/api/send
+	handle @tracker {
+		uri strip_prefix /stats
+		reverse_proxy umami:3000 {
+			header_up X-Real-IP {remote_host}
+		}
+	}
+
+	handle /stats/* {
+		respond 404
+	}
+
+	handle {
+		reverse_proxy wordle:8080
+	}
+}
