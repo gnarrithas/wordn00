@@ -1,5 +1,5 @@
 import { CogIcon, QuestionMarkCircleIcon } from "@heroicons/react/outline";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "./components/alerts/Alert";
 import { Grid } from "./components/grid/Grid";
 import { Keyboard } from "./components/keyboard/Keyboard";
@@ -56,7 +56,12 @@ import {
   getGuessRevealMs,
   prefersReducedMotion,
 } from "./lib/reveal";
-import { cycleMark, Marks } from "./lib/marks";
+import {
+  cycleMark,
+  getForcedAbsent,
+  Marks,
+  withForcedAbsent,
+} from "./lib/marks";
 import { findHint } from "./lib/hint";
 
 const ANSWER_TOAST_MS = 5000;
@@ -264,6 +269,15 @@ function Game() {
     guesses.slice(0, revealedCount).some((g) => g.length === solution.length)
       ? solution.length
       : undefined;
+  // Letters of all-red guesses, marked red by the game once the score is in.
+  const forcedAbsent = useMemo(
+    () => getForcedAbsent(guesses.slice(0, revealedCount), solution),
+    [guesses, revealedCount, solution],
+  );
+  const shownMarks = useMemo(
+    () => withForcedAbsent(marks, forcedAbsent),
+    [marks, forcedAbsent],
+  );
 
   useEffect(() => {
     if (guesses.length <= revealedCount) {
@@ -385,7 +399,7 @@ function Game() {
   };
 
   const onMark = (letter: string) => {
-    if (isGameOver) {
+    if (isGameOver || forcedAbsent.has(letter)) {
       return;
     }
     notePlayerAction();
@@ -534,7 +548,8 @@ function Game() {
         highlightLength={settings.revealLength}
         hint={import.meta.env.DEV && isSolutionShown ? solution : undefined}
         knownLength={knownLength}
-        marks={marks}
+        marks={shownMarks}
+        lockedLetters={forcedAbsent}
         onMark={onMark}
       />
       {/* Always rendered so the board and keyboard do not jump when it appears. */}
@@ -554,7 +569,7 @@ function Game() {
           onEnter={onEnter}
           onHint={onHint}
           onClearMarks={onClearMarks}
-          marks={marks}
+          marks={shownMarks}
           isPhysicalKeyboardIgnored={settings.onscreenKeyboardOnly}
           isInputDisabled={isInfoModalOpen || isSettingsModalOpen}
         />

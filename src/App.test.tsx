@@ -780,3 +780,25 @@ test("the end of a game turns the whole board to its Wordle colours", async () =
     expect(within(earlier).getByRole("img", { name })).toBeInTheDocument();
   }
 });
+
+test("an all-red guess marks its letters red, locked even through Clear", async () => {
+  await renderGame();
+  submit("DOG");
+  const row = screen.getByRole("group", { name: "Guess: DOG" });
+  // Not before the score has flipped in.
+  expect(within(row).getByRole("button", { name: "D" })).toBeInTheDocument();
+  act(() => {
+    vi.runOnlyPendingTimers();
+  });
+  for (const name of ["D absent", "O absent", "G absent"]) {
+    expect(within(row).getByRole("img", { name })).toBeInTheDocument();
+  }
+  expect(within(row).queryAllByRole("button")).toHaveLength(0);
+  expect(
+    screen.getByRole("button", { name: "D, absent" }),
+  ).toBeInTheDocument();
+  mouseClick(screen.getByRole("button", { name: "Clear marks" }));
+  expect(
+    within(row).getByRole("img", { name: "D absent" }),
+  ).toBeInTheDocument();
+});

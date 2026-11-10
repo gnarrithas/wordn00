@@ -1,4 +1,5 @@
 import { CharStatus } from "./statuses";
+import { getScore } from "./score";
 
 // The score never says which letters matched, so players note their own
 // deductions: tapping a letter on the board cycles its mark, which then
@@ -31,3 +32,32 @@ export const isMarks = (value: unknown): value is Marks =>
   Object.entries(value).every(
     ([letter, status]) => /^[A-Z]$/.test(letter) && STATUSES.has(status),
   );
+
+// As in Word500, a guess scored all red proves none of its letters is in the
+// word: the game marks them red itself. Those marks are derived from the
+// guesses, so Clear cannot remove them and the player cannot cycle them.
+export const getForcedAbsent = (
+  guesses: string[],
+  solution: string,
+): Set<string> => {
+  const letters = new Set<string>();
+  for (const guess of guesses) {
+    const { correct, present } = getScore(guess, solution);
+    if (correct === 0 && present === 0) {
+      guess.split("").forEach((letter) => letters.add(letter));
+    }
+  }
+  return letters;
+};
+
+// The player's marks with the forced red letters on top.
+export const withForcedAbsent = (marks: Marks, forced: Set<string>): Marks => {
+  if (forced.size === 0) {
+    return marks;
+  }
+  const result = { ...marks };
+  forced.forEach((letter) => {
+    result[letter] = "absent";
+  });
+  return result;
+};

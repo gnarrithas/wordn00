@@ -22,6 +22,8 @@ type Props = {
   // The player's letter marks, and how tapping a letter changes them.
   marks?: Marks;
   onMark?: (letter: string) => void;
+  // Letters the game has marked itself; tapping them does nothing.
+  lockedLetters?: Set<string>;
 };
 
 export const Grid = ({
@@ -36,6 +38,7 @@ export const Grid = ({
   knownLength,
   marks,
   onMark,
+  lockedLetters,
 }: Props) => {
   const showCurrentRow = !isGameOver && guesses.length < maxGuesses;
   // The board always starts MIN_GUESSES rows tall; longer words with extra guesses
@@ -132,6 +135,7 @@ export const Grid = ({
               }
               marks={marks}
               onMark={isGameOver ? undefined : onMark}
+              lockedLetters={lockedLetters}
             />
           ))}
           {showCurrentRow && (

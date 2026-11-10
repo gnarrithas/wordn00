@@ -21,6 +21,8 @@ type Props = {
   marks?: Marks;
   // Tapping a tile cycles its letter's mark; omit once the game is over.
   onMark?: (letter: string) => void;
+  // Letters that cannot be re-marked (see getForcedAbsent).
+  lockedLetters?: Set<string>;
 };
 
 export const CompletedRow = ({
@@ -32,6 +34,7 @@ export const CompletedRow = ({
   isLengthMatch = false,
   marks = {},
   onMark,
+  lockedLetters,
 }: Props) => {
   const score = getScore(guess, solution);
   // Freeze the delay at mount: changing animation-delay mid-flight would
@@ -73,7 +76,11 @@ export const CompletedRow = ({
             // The whole board flips at once, from the marks to the answer.
             revealDelayMs={isFlipping ? 0 : undefined}
             fromStatus={marks[letter]}
-            onClick={onMark && (() => onMark(letter))}
+            onClick={
+              onMark && !lockedLetters?.has(letter)
+                ? () => onMark(letter)
+                : undefined
+            }
           />
         ))}
       </div>
