@@ -38,7 +38,7 @@ import {
   SettingKey,
   Settings,
 } from "./lib/settings";
-import { Level } from "./lib/levels";
+import { getExcludedLetters, Level } from "./lib/levels";
 import { trackEvent } from "./lib/analytics";
 import {
   GameTimer,
@@ -640,6 +640,7 @@ function Game() {
           canRedo={!isGameOver && canRedo(marksHistory)}
           marks={shownMarks}
           usedLetters={usedLetters}
+          excludedLetters={getExcludedLetters(level)}
           isPhysicalKeyboardIgnored={settings.onscreenKeyboardOnly}
           isInputDisabled={isInfoModalOpen || isSettingsModalOpen}
         />

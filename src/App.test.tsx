@@ -685,6 +685,21 @@ test("a finished level game comes back finished, with no toast", async () => {
   expect(screen.getByRole("status")).toHaveTextContent("");
 });
 
+test("Standard greys out J, Q, X and Z, which still type", async () => {
+  await renderGame();
+  const key = (name: string) => screen.getByRole("button", { name });
+  for (const letter of ["J", "Q", "X", "Z"]) {
+    expect(key(`${letter}, not in the answer`)).toBeInTheDocument();
+  }
+  expect(key("A")).toBeInTheDocument();
+  mouseClick(key("J, not in the answer"));
+  expect(inputRow()).toHaveTextContent("J");
+  openSettings();
+  mouseClick(levelOption("Standard+"));
+  closeSettings();
+  expect(key("J")).toBeInTheDocument();
+});
+
 test("guesses are not limited by the level", async () => {
   await renderGame();
   submit("JAZZ");

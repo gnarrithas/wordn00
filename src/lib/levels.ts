@@ -28,6 +28,10 @@ const LEVEL_RULES: Record<Level, { repeats: boolean; banned: string }> = {
   advanced: { repeats: true, banned: "" },
 };
 
+// Letters no answer at the level can contain, upper case.
+export const getExcludedLetters = (level: Level): ReadonlySet<string> =>
+  new Set(LEVEL_RULES[level].banned.toUpperCase());
+
 export const isLevel = (value: unknown): value is Level =>
   typeof value === "string" && value in LEVEL_RULES;
 

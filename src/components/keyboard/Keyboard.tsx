@@ -26,6 +26,9 @@ type Props = {
   marks: Marks;
   // Letters already guessed, dimmed unless marked.
   usedLetters?: Set<string>;
+  // Letters the level keeps out of the answer: greyed like used letters,
+  // as on Word500, but still typed.
+  excludedLetters?: ReadonlySet<string>;
   // While a modal is open, physical keys must not reach the game.
   isInputDisabled?: boolean;
   // Onscreen Keyboard Input Only: physical keys never type.
@@ -85,6 +88,7 @@ export const Keyboard = ({
   canRedo = false,
   marks: charStatuses,
   usedLetters = new Set(),
+  excludedLetters = new Set(),
   isInputDisabled = false,
   isPhysicalKeyboardIgnored = false,
 }: Props) => {
@@ -267,6 +271,7 @@ export const Keyboard = ({
       onClick={onClick}
       status={getKeyMark(charStatuses, letter)}
       isUsed={usedLetters.has(letter)}
+      isExcluded={excludedLetters.has(letter)}
     />
   );
 
