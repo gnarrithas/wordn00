@@ -7,7 +7,6 @@
   --page-bg: #ffffff;
   --page-text: #000000;
   --tile-filled-border: #878a8c; /* wordle-filled */
-  --logo-start-bg: #787c7e;
   --scroll-track: #f1f5f9; /* slate-100 */
   --scroll-thumb: #94a3b8; /* slate-400 */
 }
@@ -50,7 +49,6 @@ html.dark {
   --page-bg: #121213; /* wordle-night-bg */
   --page-text: #ffffff;
   --tile-filled-border: #565758; /* wordle-night-filled */
-  --logo-start-bg: #3a3a3c;
   --scroll-track: #1f2937; /* gray-800 */
   --scroll-thumb: #565758;
 }
@@ -146,20 +144,6 @@ body {
   from,
   to {
     color: transparent;
-  }
-}
-
-/* Logo tiles flip like guesses, but start grey ("absent") rather than blank. */
-.logo-reveal {
-  animation-name: cell-reveal-flip, logo-reveal-hide;
-  animation-timing-function: ease-in-out, linear;
-  animation-fill-mode: backwards, backwards;
-}
-
-@keyframes logo-reveal-hide {
-  from,
-  to {
-    background-color: var(--logo-start-bg);
   }
 }
 
@@ -276,7 +260,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .cell-reveal,
   .score-reveal,
-  .logo-reveal,
   .cell-bounce,
   .length-match::before,
   .length-match::after {
