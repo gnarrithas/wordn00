@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { PLACEHOLDER } from "../../constants/settings";
 import { KeyValue } from "../../lib/keyboard";
-import { Marks } from "../../lib/marks";
+import { getKeyMark, Marks } from "../../lib/marks";
 import { Key } from "./Key";
 
 type Props = {
@@ -258,7 +258,7 @@ export const Keyboard = ({
       key={letter}
       value={letter as KeyValue}
       onClick={onClick}
-      status={charStatuses[letter]}
+      status={getKeyMark(charStatuses, letter)}
       isUsed={usedLetters.has(letter)}
     />
   );

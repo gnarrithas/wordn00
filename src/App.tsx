@@ -413,12 +413,14 @@ function Game() {
     }
   };
 
-  const onMark = (letter: string) => {
+  const onMark = (letter: string, position: number) => {
     if (isGameOver || forcedAbsent.has(letter)) {
       return;
     }
     notePlayerAction();
-    setMarksHistory((h) => recordMarks(h, cycleMark(h.present, letter)));
+    setMarksHistory((h) =>
+      recordMarks(h, cycleMark(h.present, letter, position)),
+    );
   };
 
   const onHint = () => {

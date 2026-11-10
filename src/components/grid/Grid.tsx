@@ -21,7 +21,7 @@ type Props = {
   knownLength?: number;
   // The player's letter marks, and how tapping a letter changes them.
   marks?: Marks;
-  onMark?: (letter: string) => void;
+  onMark?: (letter: string, position: number) => void;
   // Letters the game has marked itself; tapping them does nothing.
   lockedLetters?: Set<string>;
 };

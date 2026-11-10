@@ -1,6 +1,6 @@
 import classnames from "classnames";
 import { CSSProperties, useState } from "react";
-import { Marks } from "../../lib/marks";
+import { getMark, Marks } from "../../lib/marks";
 import { getGuessRevealMs } from "../../lib/reveal";
 import { getGuessStatuses, getScore } from "../../lib/score";
 import { Cell } from "./Cell";
@@ -19,8 +19,8 @@ type Props = {
   isLengthMatch?: boolean;
   // The player's letter marks colour the tiles.
   marks?: Marks;
-  // Tapping a tile cycles its letter's mark; omit once the game is over.
-  onMark?: (letter: string) => void;
+  // Tapping a tile cycles its mark; omit once the game is over.
+  onMark?: (letter: string, position: number) => void;
   // Letters that cannot be re-marked (see getForcedAbsent).
   lockedLetters?: Set<string>;
 };
@@ -72,13 +72,13 @@ export const CompletedRow = ({
           <Cell
             key={i}
             value={letter}
-            status={statuses ? statuses[i] : marks[letter]}
+            status={statuses ? statuses[i] : getMark(marks, letter, i)}
             // The whole board flips at once, from the marks to the answer.
             revealDelayMs={isFlipping ? 0 : undefined}
-            fromStatus={marks[letter]}
+            fromStatus={getMark(marks, letter, i)}
             onClick={
               onMark && !lockedLetters?.has(letter)
-                ? () => onMark(letter)
+                ? () => onMark(letter, i)
                 : undefined
             }
           />

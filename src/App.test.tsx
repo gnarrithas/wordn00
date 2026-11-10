@@ -856,3 +856,20 @@ test("Undo and Redo step through mark changes, keys and shortcuts", async () => 
   // The shortcut types nothing.
   expect(inputRow()).not.toHaveTextContent("Z");
 });
+
+test("green marks only that spot; the letter stays yellow elsewhere", async () => {
+  await renderGame();
+  submit("COT");
+  submit("ARC");
+  const c = (guess: string) =>
+    within(screen.getByRole("group", { name: `Guess: ${guess}` })).getByRole(
+      "button",
+      { name: /^C/ },
+    );
+  mouseClick(c("COT"));
+  mouseClick(c("COT"));
+  expect(c("ARC")).toHaveAccessibleName("C, marked present");
+  mouseClick(c("COT"));
+  expect(c("COT")).toHaveAccessibleName("C, marked correct");
+  expect(c("ARC")).toHaveAccessibleName("C, marked present");
+});

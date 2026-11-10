@@ -6,7 +6,7 @@ import {
   MIN_GUESSES,
   MIN_WORD_LENGTH,
 } from "../../constants/settings";
-import { Marks } from "../../lib/marks";
+import { getMark, Marks } from "../../lib/marks";
 import { getScore } from "../../lib/score";
 import { ScoreBoxes } from "../grid/ScoreBoxes";
 import { getSolutionLengthRange } from "../../lib/words";
@@ -32,7 +32,12 @@ const Example = ({ guess, solution, marks = {}, children }: ExampleProps) => (
         score={getScore(guess, solution)}
       />
       {guess.split("").map((letter, i) => (
-        <Cell key={i} size="sm" value={letter} status={marks[letter]} />
+        <Cell
+          key={i}
+          size="sm"
+          value={letter}
+          status={getMark(marks, letter, i)}
+        />
       ))}
     </div>
     <p>{children}</p>
@@ -120,11 +125,17 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                     <Example
                       guess="TRAIN"
                       solution="TIGER"
-                      marks={{ T: "correct", R: "present", A: "absent" }}
+                      marks={{
+                        T: "present",
+                        T0: "correct",
+                        R: "present",
+                        A: "absent",
+                      }}
                     >
                       Tap a letter on the board to note what you have worked
                       out: it cycles through red, yellow, green and back to
-                      blank, everywhere on the board and keyboard.{" "}
+                      blank. Red and yellow colour the letter everywhere on the
+                      board and keyboard; green only colours it in that spot.{" "}
                       <strong>Clear</strong> removes every mark.
                     </Example>
 

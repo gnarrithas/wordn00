@@ -1,4 +1,4 @@
-import { isMarks, Marks } from "./marks";
+import { isMarks, Marks, upgradeMarks } from "./marks";
 
 // Game progress survives reloads. Storage can be unavailable (private mode,
 // quota, disabled cookies); the game then simply starts fresh each visit.
@@ -47,7 +47,7 @@ const loadFrom = (key: string): SavedGame | null => {
       console.warn("Ignoring malformed saved game");
       return null;
     }
-    return { ...parsed, marks: parsed.marks ?? {} };
+    return { ...parsed, marks: upgradeMarks(parsed.marks ?? {}) };
   } catch (err) {
     console.warn("Could not load saved game", err);
     return null;
