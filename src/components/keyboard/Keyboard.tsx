@@ -8,6 +8,10 @@ type Props = {
   onChar: (value: string) => void;
   onDelete: () => void;
   onEnter: () => void;
+  // Types a word that fits every score so far.
+  onHint: () => void;
+  // Removes every letter mark.
+  onClearMarks: () => void;
   // The player's letter marks colour the keys.
   marks: Marks;
   // While a modal is open, physical keys must not reach the game.
@@ -39,6 +43,8 @@ export const Keyboard = ({
   onChar,
   onDelete,
   onEnter,
+  onHint,
+  onClearMarks,
   marks: charStatuses,
   isInputDisabled = false,
   isPhysicalKeyboardIgnored = false,
@@ -49,6 +55,15 @@ export const Keyboard = ({
     }
     if (value === "DELETE") {
       return onDelete();
+    }
+    if (value === "SPACE") {
+      return onChar(PLACEHOLDER);
+    }
+    if (value === "HINT") {
+      return onHint();
+    }
+    if (value === "CLEAR") {
+      return onClearMarks();
     }
     return onChar(value);
   };
@@ -156,6 +171,9 @@ export const Keyboard = ({
         // Keep a mouse-focused button from also activating.
         e.preventDefault();
         latest.onEnter();
+      } else if (e.key === "-") {
+        // Hyphen is the other placeholder key, as in Word500.
+        latest.onChar(PLACEHOLDER);
       } else if (e.code === "Space" || e.key === " ") {
         // A control reached by keyboard keeps Space for its own activation.
         if (isControl(active) && focusedByKeyboardRef.current()) {
@@ -218,6 +236,17 @@ export const Keyboard = ({
         <Key value="M" onClick={onClick} status={charStatuses["M"]} />
         <Key isWide value="DELETE" onClick={onClick}>
           Delete
+        </Key>
+      </div>
+      <div className="flex justify-center mt-1 px-1">
+        <Key isWide value="HINT" onClick={onClick}>
+          Hint
+        </Key>
+        <Key isSpace value="SPACE" onClick={onClick}>
+          Space
+        </Key>
+        <Key isWide value="CLEAR" onClick={onClick}>
+          Clear
         </Key>
       </div>
     </div>

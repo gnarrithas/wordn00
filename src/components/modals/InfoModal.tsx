@@ -126,8 +126,15 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                     >
                       Tap a letter on the board to note what you have worked
                       out: it cycles through red, yellow, green and back to
-                      blank, everywhere on the board and keyboard.
+                      blank, everywhere on the board and keyboard.{" "}
+                      <strong>Clear</strong> removes every mark.
                     </Example>
+
+                    <p>
+                      <strong>Space</strong> (or <strong>-</strong>) types a
+                      blank to fill in later. <strong>Hint</strong> types a word
+                      that fits every score so far.
+                    </p>
                   </div>
                 </div>
               </div>

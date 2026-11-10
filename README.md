@@ -17,6 +17,9 @@ coloured tiles), stretched like Wordler: the hidden word can be anywhere from
   least 8. The board grows a row at a time.
 - **Your own notes.** Tap a guessed letter to cycle its mark (red, yellow,
   green, blank); marks colour that letter on the board and keyboard.
+  **Clear** removes them all.
+- **Keyboard extras.** **Space** (or `-`) types a blank to fill in later;
+  **Hint** types a word that fits every score so far.
 - **Hard mode.** Every guess must fit the scores of the guesses before it.
 - **Letters used.** Every guessed letter counts towards a secondary score.
 - **Unlimited play.** The first game each day uses the daily word; **New

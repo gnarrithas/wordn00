@@ -115,6 +115,9 @@ export const isWordInWordList = (word: string) => {
   return solutionSet.has(lower) || guessSet.has(lower);
 };
 
+// Every possible answer, lower case.
+export const getSolutions = (): readonly string[] => getLists().solutions;
+
 export const isSolution = (word: string) =>
   getLists().solutionSet.has(word.toLowerCase());
 

@@ -18,6 +18,7 @@ import {
   getRandomWord,
   getMaxGuesses,
   isSolution,
+  getSolutions,
   areWordsLoaded,
   loadWords,
 } from "./lib/words";
@@ -55,6 +56,7 @@ import {
   prefersReducedMotion,
 } from "./lib/reveal";
 import { cycleMark, Marks } from "./lib/marks";
+import { findHint } from "./lib/hint";
 
 const ANSWER_TOAST_MS = 5000;
 const WIN_TOAST_MS = 2000;
@@ -379,6 +381,28 @@ function Game() {
     setMarks((prev) => cycleMark(prev, letter));
   };
 
+  const onHint = () => {
+    if (isGameOver) {
+      return;
+    }
+    if (guesses.length === 0) {
+      return showToast("Make a guess first", ERROR_TOAST_MS);
+    }
+    notePlayerAction();
+    const hint = findHint(guesses, solution, getSolutions());
+    if (hint) {
+      setCurrentGuess(hint);
+    }
+  };
+
+  const onClearMarks = () => {
+    if (isGameOver) {
+      return;
+    }
+    notePlayerAction();
+    setMarks({});
+  };
+
   const onSettingChange = (key: SettingKey, value: boolean) => {
     // As in Wordle, hard mode cannot be switched on partway through a round.
     if (key === "hardMode" && value && guesses.length > 0 && !isGameOver) {
@@ -517,6 +541,8 @@ function Game() {
           onChar={onChar}
           onDelete={onDelete}
           onEnter={onEnter}
+          onHint={onHint}
+          onClearMarks={onClearMarks}
           marks={marks}
           isPhysicalKeyboardIgnored={settings.onscreenKeyboardOnly}
           isInputDisabled={isInfoModalOpen || isSettingsModalOpen}
