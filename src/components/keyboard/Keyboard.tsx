@@ -243,7 +243,7 @@ export const Keyboard = ({
           Hint
         </Key>
         <Key isSpace value="SPACE" onClick={onClick}>
-          Space
+          SPACE
         </Key>
         <Key isWide value="CLEAR" onClick={onClick}>
           Clear
