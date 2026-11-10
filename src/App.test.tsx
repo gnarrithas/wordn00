@@ -819,3 +819,40 @@ test("guessed letters dim their keys unless marked", async () => {
     screen.getByRole("button", { name: "C, absent" }),
   ).toBeInTheDocument();
 });
+
+test("Undo and Redo step through mark changes, keys and shortcuts", async () => {
+  await renderGame();
+  submit("COT");
+  const row = screen.getByRole("group", { name: "Guess: COT" });
+  const tile = () => within(row).getAllByRole("button")[0];
+  const undo = () => screen.getByRole("button", { name: "Undo mark change" });
+  const redo = () => screen.getByRole("button", { name: "Redo mark change" });
+  expect(undo()).toBeDisabled();
+  expect(redo()).toBeDisabled();
+  mouseClick(tile());
+  mouseClick(tile());
+  expect(tile()).toHaveAccessibleName("C, marked present");
+  mouseClick(undo());
+  expect(tile()).toHaveAccessibleName("C, marked absent");
+  expect(redo()).toBeEnabled();
+  mouseClick(redo());
+  expect(tile()).toHaveAccessibleName("C, marked present");
+  // Clear is a step too.
+  mouseClick(screen.getByRole("button", { name: "Clear marks" }));
+  expect(tile()).toHaveAccessibleName("C");
+  act(() => {
+    fireEvent.keyDown(window, { key: "z", code: "KeyZ", ctrlKey: true });
+  });
+  expect(tile()).toHaveAccessibleName("C, marked present");
+  act(() => {
+    fireEvent.keyDown(window, {
+      key: "Z",
+      code: "KeyZ",
+      metaKey: true,
+      shiftKey: true,
+    });
+  });
+  expect(tile()).toHaveAccessibleName("C");
+  // The shortcut types nothing.
+  expect(inputRow()).not.toHaveTextContent("Z");
+});

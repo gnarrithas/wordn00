@@ -12,6 +12,11 @@ type Props = {
   onHint: () => void;
   // Removes every letter mark.
   onClearMarks: () => void;
+  // Step back and forth through mark changes; the flags enable the keys.
+  onUndo: () => void;
+  onRedo: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
   // The player's letter marks colour the keys.
   marks: Marks;
   // Letters already guessed, dimmed unless marked.
@@ -47,6 +52,10 @@ export const Keyboard = ({
   onEnter,
   onHint,
   onClearMarks,
+  onUndo,
+  onRedo,
+  canUndo = false,
+  canRedo = false,
   marks: charStatuses,
   usedLetters = new Set(),
   isInputDisabled = false,
@@ -68,6 +77,12 @@ export const Keyboard = ({
     if (value === "CLEAR") {
       return onClearMarks();
     }
+    if (value === "UNDO") {
+      return onUndo();
+    }
+    if (value === "REDO") {
+      return onRedo();
+    }
     return onChar(value);
   };
 
@@ -76,6 +91,8 @@ export const Keyboard = ({
     onChar,
     onDelete,
     onEnter,
+    onUndo,
+    onRedo,
     isInputDisabled,
     isPhysicalKeyboardIgnored,
   });
@@ -84,6 +101,8 @@ export const Keyboard = ({
     onChar,
     onDelete,
     onEnter,
+    onUndo,
+    onRedo,
     isInputDisabled,
     isPhysicalKeyboardIgnored,
   };
@@ -157,16 +176,27 @@ export const Keyboard = ({
       if (
         latest.isInputDisabled ||
         latest.isPhysicalKeyboardIgnored ||
-        e.ctrlKey ||
-        e.metaKey ||
-        e.altKey
+        isTextField(document.activeElement)
       ) {
         return;
       }
-      const active = document.activeElement;
-      if (isTextField(active)) {
+      // Undo: Ctrl/Cmd+Z. Redo: Ctrl/Cmd+Shift+Z or Ctrl/Cmd+Y.
+      if ((e.ctrlKey || e.metaKey) && !e.altKey) {
+        const key = e.key.toLowerCase();
+        if (key === "z" || key === "y") {
+          e.preventDefault();
+          if (key === "z" && !e.shiftKey) {
+            latest.onUndo();
+          } else {
+            latest.onRedo();
+          }
+        }
         return;
       }
+      if (e.ctrlKey || e.metaKey || e.altKey) {
+        return;
+      }
+      const active = document.activeElement;
       if (e.code === "Enter" || e.code === "NumpadEnter" || e.key === "Enter") {
         if (e.repeat || (isControl(active) && focusedByKeyboardRef.current())) {
           return;
@@ -230,6 +260,9 @@ export const Keyboard = ({
         </Key>
       </div>
       <div className="flex justify-center">
+        <Key isWide value="UNDO" onClick={onClick} isDisabled={!canUndo}>
+          Undo
+        </Key>
         <Key isWide value="HINT" onClick={onClick}>
           Hint
         </Key>
@@ -238,6 +271,9 @@ export const Keyboard = ({
         </Key>
         <Key isWide value="CLEAR" onClick={onClick}>
           Clear
+        </Key>
+        <Key isWide value="REDO" onClick={onClick} isDisabled={!canRedo}>
+          Redo
         </Key>
       </div>
     </div>

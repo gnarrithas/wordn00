@@ -9,6 +9,8 @@ const KEY_LABELS: Partial<Record<KeyValue, string>> = {
   SPACE: "Space (blank letter)",
   HINT: "Hint",
   CLEAR: "Clear marks",
+  UNDO: "Undo mark change",
+  REDO: "Redo mark change",
 };
 
 type Props = {
@@ -21,6 +23,8 @@ type Props = {
   status?: CharStatus;
   // A letter already guessed: dimmed, as in Word500, unless marked.
   isUsed?: boolean;
+  // Greyed out and inert, e.g. Undo with nothing to undo.
+  isDisabled?: boolean;
   onClick: (value: KeyValue) => void;
 };
 
@@ -30,6 +34,7 @@ export const Key = ({
   isWide = false,
   isSpace = false,
   isUsed = false,
+  isDisabled = false,
   value,
   onClick,
 }: Props) => {
@@ -42,6 +47,7 @@ export const Key = ({
       "flex-[1.5] max-w-[72px] text-xs": isWide,
       "bg-ui-key text-ui-text": !status && !isUsed,
       "bg-ui-key-used text-ui-key-used-text": !status && isUsed,
+      "opacity-40 cursor-default pointer-events-none": isDisabled,
       "bg-wordle-absent dark:bg-wordle-night-absent text-white":
         status === "absent",
       "bg-wordle-correct dark:bg-wordle-night-correct text-white":
@@ -61,6 +67,7 @@ export const Key = ({
       type="button"
       aria-label={label}
       className={classes}
+      disabled={isDisabled}
       onClick={() => onClick(value)}
     >
       {children || value}

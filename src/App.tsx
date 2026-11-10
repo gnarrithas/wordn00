@@ -62,6 +62,15 @@ import {
   Marks,
   withForcedAbsent,
 } from "./lib/marks";
+import {
+  canRedo,
+  canUndo,
+  MarksHistory,
+  recordMarks,
+  redoMarks,
+  startHistory,
+  undoMarks,
+} from "./lib/marksHistory";
 import { findHint } from "./lib/hint";
 
 const ANSWER_TOAST_MS = 5000;
@@ -123,7 +132,11 @@ function Game() {
     () => initialGame?.guesses ?? [],
   );
   const [currentGuess, setCurrentGuess] = useState("");
-  const [marks, setMarks] = useState<Marks>(() => initialGame?.marks ?? {});
+  // The player's marks, with undo and redo.
+  const [marksHistory, setMarksHistory] = useState<MarksHistory>(() =>
+    startHistory(initialGame?.marks ?? {}),
+  );
+  const marks = marksHistory.present;
   const [isGameWon, setIsGameWon] = useState(
     () => initialGame?.isGameWon ?? false,
   );
@@ -405,7 +418,7 @@ function Game() {
       return;
     }
     notePlayerAction();
-    setMarks((prev) => cycleMark(prev, letter));
+    setMarksHistory((h) => recordMarks(h, cycleMark(h.present, letter)));
   };
 
   const onHint = () => {
@@ -427,7 +440,27 @@ function Game() {
       return;
     }
     notePlayerAction();
-    setMarks({});
+    // Clearing nothing adds no undo step.
+    setMarksHistory((h) =>
+      Object.keys(h.present).length === 0 ? h : recordMarks(h, {}),
+    );
+  };
+
+  // Marks are fixed once the game is over, undo included.
+  const onUndoMarks = () => {
+    if (isGameOver) {
+      return;
+    }
+    notePlayerAction();
+    setMarksHistory(undoMarks);
+  };
+
+  const onRedoMarks = () => {
+    if (isGameOver) {
+      return;
+    }
+    notePlayerAction();
+    setMarksHistory(redoMarks);
   };
 
   const onSettingChange = (key: SettingKey, value: boolean) => {
@@ -462,7 +495,7 @@ function Game() {
     setSolution(nextSolution);
     setDay(null);
     setGuesses([]);
-    setMarks({});
+    setMarksHistory(startHistory({}));
     setCurrentGuess("");
     setIsGameWon(false);
     setIsAnswerRevealed(false);
@@ -571,6 +604,10 @@ function Game() {
           onEnter={onEnter}
           onHint={onHint}
           onClearMarks={onClearMarks}
+          onUndo={onUndoMarks}
+          onRedo={onRedoMarks}
+          canUndo={!isGameOver && canUndo(marksHistory)}
+          canRedo={!isGameOver && canRedo(marksHistory)}
           marks={shownMarks}
           usedLetters={usedLetters}
           isPhysicalKeyboardIgnored={settings.onscreenKeyboardOnly}
