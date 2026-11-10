@@ -34,7 +34,7 @@ export const Key = ({
     },
   );
 
-  // Screen readers hear the letter's state too, e.g. "A, correct".
+  // Screen readers hear the letter's mark too, e.g. "A, correct".
   const label =
     value === "ENTER"
       ? "Enter"

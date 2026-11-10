@@ -21,7 +21,10 @@ type ToggleProps = {
 };
 
 const Toggle = ({ label, description, checked, onChange }: ToggleProps) => (
-  <Switch.Group as="div" className="flex items-center justify-between gap-4 py-3">
+  <Switch.Group
+    as="div"
+    className="flex items-center justify-between gap-4 py-3"
+  >
     <div>
       <Switch.Label className="text-sm font-medium text-gray-900 dark:text-white">
         {label}
@@ -114,7 +117,7 @@ export const SettingsModal = ({
               <div className="mt-4 divide-y divide-gray-200 dark:divide-gray-700">
                 <Toggle
                   label="Hard Mode"
-                  description="Any revealed hints must be used in subsequent guesses"
+                  description="Every guess must fit the scores of the guesses before it"
                   checked={settings.hardMode}
                   onChange={(v) => onSettingChange("hardMode", v)}
                 />

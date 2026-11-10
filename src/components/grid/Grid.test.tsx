@@ -14,9 +14,11 @@ const renderGrid = (guessCount: number, maxGuesses: number) =>
   );
 
 const rows = () => Array.from(screen.getByTestId("board").children);
+// A row is its score boxes, then its letter tiles.
+const tiles = (row: Element) => Array.from(row.lastElementChild!.children);
 const isDashedRow = (row: Element) =>
-  row.children.length > 0 &&
-  Array.from(row.children).every((c) => c.classList.contains("border-dashed"));
+  row.querySelectorAll(".border-solid, .border-dotted").length === 0 &&
+  row.querySelectorAll(".border-dashed").length > 0;
 
 const renderOver = () =>
   render(
@@ -30,14 +32,14 @@ const renderOver = () =>
     />,
   );
 
-// Six rows plus the dashed row until guesses outgrow them.
+// Eight rows plus the dashed row until guesses outgrow them.
 test.each([
-  [0, 8, 7],
-  [4, 8, 7],
-  [5, 8, 7],
-  [6, 8, 8],
-  [0, 6, 7],
-  [4, 6, 7],
+  [0, 10, 9],
+  [6, 10, 9],
+  [7, 10, 9],
+  [8, 10, 10],
+  [0, 8, 9],
+  [6, 8, 9],
 ])(
   "%i guesses of %i: %i rows, exactly one dashed, at the bottom",
   (guessCount, maxGuesses, rowCount) => {
@@ -49,8 +51,8 @@ test.each([
 );
 
 test.each([
+  [9, 10],
   [7, 8],
-  [5, 6],
 ])("no dashed row on the last allowed guess (%i of %i)", (count, max) => {
   renderGrid(count, max);
   expect(rows()).toHaveLength(max);
@@ -65,7 +67,7 @@ test("no dashed row once the game is over", () => {
 
 describe("known length markers", () => {
   const borders = (row: Element) =>
-    Array.from(row.children).map((c) =>
+    tiles(row).map((c) =>
       c.classList.contains("border-dotted")
         ? "."
         : c.classList.contains("border-dashed")

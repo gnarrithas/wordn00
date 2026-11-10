@@ -1,4 +1,10 @@
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import type { Mock } from "vitest";
 import { readFileSync } from "fs";
 import { join } from "path";
@@ -59,6 +65,15 @@ const submit = (word: string) => {
 };
 
 const board = () => screen.getByTestId("board");
+// The board's letters, without the score digits.
+const boardText = () => {
+  const copy = board().cloneNode(true) as HTMLElement;
+  copy.querySelectorAll('[data-testid="score"]').forEach((el) => el.remove());
+  return copy.textContent;
+};
+// A guess's whole row: its score boxes and its letters.
+const guessRow = (name: string) =>
+  screen.getByRole("group", { name }).parentElement;
 // The input row disappears once the game is over.
 const inputRow = () => screen.queryByRole("group", { name: "Current guess" });
 const hints = () =>
@@ -153,8 +168,8 @@ test("typing after a win changes nothing and the input row is gone", async () =>
   type("DOG");
   expect(board()).not.toHaveTextContent("D");
   expect(board().children.length).toBe(rowsAfterWin);
-  // The winning guess and five placeholder rows; no input or dashed row.
-  expect(rowsAfterWin).toBe(6);
+  // The winning guess and seven placeholder rows; no input or dashed row.
+  expect(rowsAfterWin).toBe(8);
 });
 
 test("production builds keep New word but hide Reveal", async () => {
@@ -234,14 +249,10 @@ test("tiles, rows and keys have accessible names", async () => {
   await renderGame();
   submit("COT");
   expect(screen.getByRole("group", { name: "Guess: COT" })).toBeInTheDocument();
-  expect(screen.getByRole("img", { name: "C correct" })).toBeInTheDocument();
-  expect(screen.getByRole("img", { name: "O absent" })).toBeInTheDocument();
-  act(() => {
-    vi.runOnlyPendingTimers();
-  });
   expect(
-    screen.getByRole("button", { name: "C, correct" }),
+    screen.getByRole("img", { name: "2 correct, 0 present, 1 absent" }),
   ).toBeInTheDocument();
+  expect(screen.getAllByRole("button", { name: "C" })).toHaveLength(2);
   expect(screen.getByRole("button", { name: "Enter" })).toBeInTheDocument();
   expect(screen.getByRole("button", { name: "Delete" })).toBeInTheDocument();
   expect(
@@ -296,11 +307,11 @@ test("onscreen keyboard input only ignores physical keys", async () => {
   await renderGame();
   toggleSetting("Onscreen Keyboard Input Only");
   type("COT");
-  expect(board().textContent).toBe("");
+  expect(boardText()).toBe("");
   ["C", "O", "T"].forEach((letter) =>
     mouseClick(screen.getByRole("button", { name: letter })),
   );
-  expect(board().textContent).toBe("COT");
+  expect(boardText()).toBe("COT");
 });
 
 test("the settings dialog switches the theme", async () => {
@@ -324,7 +335,7 @@ test("holding Backspace keeps deleting", async () => {
   type("COT");
   keyDown({ key: "Backspace", code: "Backspace" });
   keyDown({ key: "Backspace", code: "Backspace", repeat: true });
-  expect(board().textContent).toBe("C");
+  expect(boardText()).toBe("C");
 });
 
 test("numpad Enter submits, a held Enter does not", async () => {
@@ -354,7 +365,7 @@ test("keys do nothing while a modal is open; Enter submits after a mouse close",
   mouseClick(settingsButton());
   type("T");
   press("Enter");
-  expect(board().textContent).toBe("CA");
+  expect(boardText()).toBe("CA");
   mouseClick(document.querySelector('[id^="headlessui-dialog-overlay"]')!);
   waitForModalTransition();
   expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
@@ -385,7 +396,7 @@ test("Space never presses a mouse-clicked button again", async () => {
   expect(fireEvent.keyDown(newWord, { key: " ", code: "Space" })).toBe(false);
   expect(fireEvent.keyUp(newWord, { key: " ", code: "Space" })).toBe(false);
   // It types a placeholder instead.
-  expect(board().textContent).toBe("COT_");
+  expect(boardText()).toBe("COT_");
 });
 
 test("Space still presses a button reached with the keyboard", async () => {
@@ -395,7 +406,7 @@ test("Space still presses a button reached with the keyboard", async () => {
   act(() => newWord.focus());
   expect(fireEvent.keyDown(newWord, { key: " ", code: "Space" })).toBe(true);
   expect(fireEvent.keyUp(newWord, { key: " ", code: "Space" })).toBe(true);
-  expect(board().textContent).toBe("");
+  expect(boardText()).toBe("");
 });
 
 test("Space types a placeholder that blocks submitting", async () => {
@@ -403,15 +414,15 @@ test("Space types a placeholder that blocks submitting", async () => {
   type("C");
   press(" ");
   type("T");
-  expect(board().textContent).toBe("C_T");
+  expect(boardText()).toBe("C_T");
   press("Enter");
   expect(toast("Replace every _ first")).toBeInTheDocument();
-  expect(board().textContent).toBe("C_T");
+  expect(boardText()).toBe("C_T");
   press("Backspace");
   press("Backspace");
   type("AT");
   press("Enter");
-  expect(board().textContent).toBe("CAT");
+  expect(boardText()).toBe("CAT");
   expect(inputRow()).not.toBeInTheDocument();
 });
 
@@ -420,7 +431,7 @@ test("Enter submits after clicking a button and typing", async () => {
   mouseClick(screen.getByText("New word"));
   expect(document.activeElement).toBe(screen.getByText("New word"));
   submit("CAT");
-  expect(board().textContent).toBe("CAT");
+  expect(boardText()).toBe("CAT");
   expect(screen.getByText(/Total letters used/)).toHaveTextContent(
     "Total letters used: 3",
   );
@@ -440,7 +451,7 @@ test("refreshing mid-game restores the board without a toast", async () => {
   type("CA");
   unmount();
   await renderGame();
-  expect(board().textContent).toBe("COT");
+  expect(boardText()).toBe("COT");
   expect(inputRow()).toBeInTheDocument();
 });
 
@@ -453,7 +464,7 @@ test("refreshing a finished game restores it with Share and no toast", async () 
   });
   unmount();
   await renderGame();
-  expect(board().textContent).toBe("COTCAT");
+  expect(boardText()).toBe("COTCAT");
   expect(inputRow()).not.toBeInTheDocument();
   expect(queryToast("Lucky")).not.toBeInTheDocument();
   act(() => {
@@ -470,7 +481,7 @@ test("a game saved on an earlier day gives way to today's word", async () => {
   unmount();
   vi.setSystemTime(new Date(2026, 10, 10, 0, 30));
   await renderGame();
-  expect(board().textContent).toBe("");
+  expect(boardText()).toBe("");
 });
 
 test("New word mid-daily: a reload returns to the unfinished daily", async () => {
@@ -480,7 +491,7 @@ test("New word mid-daily: a reload returns to the unfinished daily", async () =>
   submit("DOG");
   unmount();
   await renderGame();
-  expect(board().textContent).toBe("COT");
+  expect(boardText()).toBe("COT");
   expect(inputRow()).toBeInTheDocument();
 });
 
@@ -494,7 +505,7 @@ test("after the daily, a New word game survives a reload", async () => {
   submit("COT");
   unmount();
   await renderGame();
-  expect(board().textContent).toBe("COT");
+  expect(boardText()).toBe("COT");
   expect(inputRow()).toBeInTheDocument();
 });
 
@@ -511,7 +522,7 @@ test("a New word game from an earlier day never comes back", async () => {
   // The next day starts its daily word and drops the old New word game...
   vi.setSystemTime(new Date(2026, 10, 10, 12));
   const second = await renderGame();
-  expect(board().textContent).toBe("");
+  expect(boardText()).toBe("");
   submit("CAT");
   act(() => {
     vi.runOnlyPendingTimers();
@@ -519,7 +530,7 @@ test("a New word game from an earlier day never comes back", async () => {
   second.unmount();
   // ...so finishing that daily shows its result, not the stale game.
   await renderGame();
-  expect(board().textContent).toBe("CAT");
+  expect(boardText()).toBe("CAT");
   expect(inputRow()).not.toBeInTheDocument();
 });
 
@@ -544,7 +555,7 @@ test("Share copies the day number (from 1), letter count and site link", async (
     fireEvent.click(screen.getByText("Share"));
   });
   expect(writeText).toHaveBeenCalledWith(
-    "Wordn00 3 · 6 letters\n\n🟩⬜🟩\n🟩🟩🟩\n\n" +
+    "Wordn00 3 · 6 letters\n\n🟩2 🟨0 🟥1\n🟩3 🟨0 🟥0\n\n" +
       new URL(import.meta.env.BASE_URL, window.location.origin).href,
   );
   delete (navigator as any).clipboard;
@@ -561,20 +572,21 @@ test("a saved word that left the solution list is discarded", async () => {
     }),
   );
   await renderGame();
-  expect(board().textContent).toBe("");
+  expect(boardText()).toBe("");
 });
 
 test("reveal length outlines a guess of the right length and announces it once", async () => {
   await renderGame();
   toggleSetting("Reveal Length");
   submit("CART");
-  expect(screen.getByRole("group", { name: "Guess: CART" })).not.toHaveClass(
+  expect(guessRow("Guess: CART")).not.toHaveClass(
     "length-match",
   );
   submit("DOG");
-  expect(
-    screen.getByRole("group", { name: "Guess: DOG (right length)" }),
-  ).toHaveClass("length-match", "length-match-enter");
+  expect(guessRow("Guess: DOG (right length)")).toHaveClass(
+    "length-match",
+    "length-match-enter",
+  );
   act(() => {
     vi.advanceTimersByTime(3000);
   });
@@ -613,7 +625,7 @@ test("without reveal length, nothing is outlined nor announced", async () => {
   act(() => {
     vi.advanceTimersByTime(3000);
   });
-  expect(screen.getByRole("group", { name: "Guess: DOG" })).not.toHaveClass(
+  expect(guessRow("Guess: DOG")).not.toHaveClass(
     "length-match",
   );
   expect(queryToast("Right length! The word has 3 letters")).toBeNull();
@@ -625,13 +637,13 @@ test("hard mode rejects guesses that ignore the hints", async () => {
   toggleSetting("Hard Mode");
   submit("COT");
   submit("DOG");
-  expect(toast("1st letter must be C")).toBeInTheDocument();
-  expect(board().textContent).toBe("COTDOG");
+  expect(toast("Guess must fit the score of guess 1")).toBeInTheDocument();
+  expect(boardText()).toBe("COTDOG");
   press("Backspace");
   press("Backspace");
   press("Backspace");
   submit("CUT");
-  expect(board().textContent).toBe("COTCUT");
+  expect(boardText()).toBe("COTCUT");
 });
 
 test("hard mode cannot be turned on mid-round", async () => {
@@ -645,7 +657,7 @@ test("hard mode cannot be turned on mid-round", async () => {
   expect(settingSwitch("Hard Mode")).toHaveAttribute("aria-checked", "false");
   closeSettings();
   submit("DOG");
-  expect(board().textContent).toBe("COTDOG");
+  expect(boardText()).toBe("COTDOG");
 });
 
 test("a won game reports its start and its end", async () => {
@@ -711,4 +723,36 @@ test("game time caps idle gaps and survives a reload", async () => {
   expect(eventsNamed("game_end")).toEqual([
     expect.objectContaining({ outcome: "won", seconds: 30 + 120 + 10 }),
   ]);
+});
+
+test("tapping a guessed letter cycles its mark on the board and keyboard", async () => {
+  const { unmount } = await renderGame();
+  submit("COT");
+  const row = () => screen.getByRole("group", { name: "Guess: COT" });
+  const tile = () => within(row()).getAllByRole("button")[0];
+  const key = (name: string) =>
+    screen
+      .getAllByRole("button", { name })
+      .filter((el) => !row().contains(el));
+  expect(tile()).toHaveAccessibleName("C");
+  mouseClick(tile());
+  expect(tile()).toHaveAccessibleName("C, marked absent");
+  expect(key("C, absent")).toHaveLength(1);
+  mouseClick(tile());
+  mouseClick(tile());
+  expect(tile()).toHaveAccessibleName("C, marked correct");
+  // Marks are saved with the game.
+  unmount();
+  await renderGame();
+  expect(key("C, correct")).toHaveLength(1);
+  mouseClick(tile());
+  expect(key("C")).toHaveLength(1);
+});
+
+test("a won game's tiles are green and no longer markable", async () => {
+  await renderGame();
+  submit("CAT");
+  const row = screen.getByRole("group", { name: "Guess: CAT" });
+  expect(within(row).queryAllByRole("button")).toHaveLength(0);
+  expect(within(row).getByRole("img", { name: "C correct" })).toBeInTheDocument();
 });

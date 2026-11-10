@@ -26,6 +26,14 @@ export const getBounceStaggerMs = (length: number) =>
 export const getRowRevealMs = (length: number) =>
   Math.max(0, length - 1) * getRevealStaggerMs(length) + FLIP_MS;
 
+// A guess's score: three boxes, flipped like tiles.
+export const SCORE_BOXES = 3;
+
+// Time from a guess appearing until it is fully revealed: its score boxes
+// flip, and a winning guess also flips its letters green alongside.
+export const getGuessRevealMs = (length: number, isWin = false) =>
+  Math.max(getRowRevealMs(SCORE_BOXES), isWin ? getRowRevealMs(length) : 0);
+
 // Time from the winning row's reveal ending until its last tile stops bouncing.
 export const getRowBounceMs = (length: number) =>
   Math.max(0, length - 1) * getBounceStaggerMs(length) + BOUNCE_MS;

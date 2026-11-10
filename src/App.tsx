@@ -50,10 +50,11 @@ import { getTheme, setTheme, Theme, watchSystemTheme } from "./lib/theme";
 import { copyText, countLetters, getShareText, getSiteUrl } from "./lib/share";
 import { getWinMessage } from "./lib/winMessage";
 import {
+  getGuessRevealMs,
   getRowBounceMs,
-  getRowRevealMs,
   prefersReducedMotion,
 } from "./lib/reveal";
+import { cycleMark, Marks } from "./lib/marks";
 
 const ANSWER_TOAST_MS = 5000;
 const WIN_TOAST_MS = 2000;
@@ -109,6 +110,7 @@ function Game() {
     () => initialGame?.guesses ?? [],
   );
   const [currentGuess, setCurrentGuess] = useState("");
+  const [marks, setMarks] = useState<Marks>(() => initialGame?.marks ?? {});
   const [isGameWon, setIsGameWon] = useState(
     () => initialGame?.isGameWon ?? false,
   );
@@ -168,8 +170,8 @@ function Game() {
   }, []);
 
   useEffect(() => {
-    saveGame({ solution, guesses, isGameWon, isAnswerRevealed, day });
-  }, [solution, guesses, isGameWon, isAnswerRevealed, day]);
+    saveGame({ solution, guesses, isGameWon, isAnswerRevealed, day, marks });
+  }, [solution, guesses, isGameWon, isAnswerRevealed, day, marks]);
 
   useEffect(
     () => () => {
@@ -237,7 +239,7 @@ function Game() {
     const winningGuess = guesses[guesses.length - 1];
     const revealMs = prefersReducedMotion()
       ? 0
-      : getRowRevealMs(winningGuess.length);
+      : getGuessRevealMs(winningGuess.length, true);
     const message = getWinMessage(guesses.length, maxGuesses);
     const timer = setTimeout(() => showToast(message, WIN_TOAST_MS), revealMs);
     return () => clearTimeout(timer);
@@ -245,7 +247,7 @@ function Game() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isGameWon]);
 
-  // Guesses whose tile reveal has finished; the keyboard only colours these.
+  // Guesses whose score reveal has finished.
   const [revealedCount, setRevealedCount] = useState(guesses.length);
   // Reveal Length: once a revealed guess has the word's length, later rows
   // mark it.
@@ -264,10 +266,12 @@ function Game() {
     const lastGuess = guesses[guesses.length - 1];
     const timer = setTimeout(
       () => setRevealedCount(guesses.length),
-      prefersReducedMotion() ? 0 : getRowRevealMs(lastGuess.length),
+      prefersReducedMotion()
+        ? 0
+        : getGuessRevealMs(lastGuess.length, lastGuess === solution),
     );
     return () => clearTimeout(timer);
-  }, [guesses, revealedCount]);
+  }, [guesses, revealedCount, solution]);
 
   useEffect(() => {
     if (!isGameOver) {
@@ -340,13 +344,13 @@ function Game() {
     if (guess === solution) {
       trackGameEnd("won", guesses.length + 1);
       setEndAnimationMs(
-        getRowRevealMs(guess.length) + getRowBounceMs(guess.length),
+        getGuessRevealMs(guess.length, true) + getRowBounceMs(guess.length),
       );
       setIsGameWon(true);
     } else if (guesses.length + 1 >= maxGuesses) {
       trackGameEnd("lost", guesses.length + 1);
       // Out of guesses: the answer toast follows the last row's reveal.
-      setEndAnimationMs(getRowRevealMs(guess.length));
+      setEndAnimationMs(getGuessRevealMs(guess.length));
       setRevealedAnswer(solution);
       setIsAnswerRevealed(true);
     } else if (
@@ -362,9 +366,17 @@ function Game() {
             `Right length! The word has ${solution.length} letters`,
             LENGTH_TOAST_MS,
           ),
-        prefersReducedMotion() ? 0 : getRowRevealMs(guess.length),
+        prefersReducedMotion() ? 0 : getGuessRevealMs(guess.length),
       );
     }
+  };
+
+  const onMark = (letter: string) => {
+    if (isGameOver) {
+      return;
+    }
+    notePlayerAction();
+    setMarks((prev) => cycleMark(prev, letter));
   };
 
   const onSettingChange = (key: SettingKey, value: boolean) => {
@@ -399,6 +411,7 @@ function Game() {
     setSolution(nextSolution);
     setDay(null);
     setGuesses([]);
+    setMarks({});
     setCurrentGuess("");
     setIsGameWon(false);
     setIsAnswerRevealed(false);
@@ -486,6 +499,8 @@ function Game() {
         highlightLength={settings.revealLength}
         hint={import.meta.env.DEV && isSolutionShown ? solution : undefined}
         knownLength={knownLength}
+        marks={marks}
+        onMark={onMark}
       />
       {/* Always rendered so the board and keyboard do not jump when it appears. */}
       <button
@@ -502,8 +517,7 @@ function Game() {
           onChar={onChar}
           onDelete={onDelete}
           onEnter={onEnter}
-          guesses={guesses.slice(0, revealedCount)}
-          solution={solution}
+          marks={marks}
           isPhysicalKeyboardIgnored={settings.onscreenKeyboardOnly}
           isInputDisabled={isInfoModalOpen || isSettingsModalOpen}
         />

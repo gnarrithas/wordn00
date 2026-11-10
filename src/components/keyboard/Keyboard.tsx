@@ -1,15 +1,15 @@
 import { useEffect, useRef } from "react";
 import { PLACEHOLDER } from "../../constants/settings";
 import { KeyValue } from "../../lib/keyboard";
-import { getStatuses } from "../../lib/statuses";
+import { Marks } from "../../lib/marks";
 import { Key } from "./Key";
 
 type Props = {
   onChar: (value: string) => void;
   onDelete: () => void;
   onEnter: () => void;
-  guesses: string[];
-  solution: string;
+  // The player's letter marks colour the keys.
+  marks: Marks;
   // While a modal is open, physical keys must not reach the game.
   isInputDisabled?: boolean;
   // Onscreen Keyboard Input Only: physical keys never type.
@@ -39,13 +39,10 @@ export const Keyboard = ({
   onChar,
   onDelete,
   onEnter,
-  guesses,
-  solution,
+  marks: charStatuses,
   isInputDisabled = false,
   isPhysicalKeyboardIgnored = false,
 }: Props) => {
-  const charStatuses = getStatuses(guesses, solution);
-
   const onClick = (value: KeyValue) => {
     if (value === "ENTER") {
       return onEnter();

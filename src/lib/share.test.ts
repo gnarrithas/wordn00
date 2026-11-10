@@ -2,7 +2,7 @@ import { copyText, getShareText, getSiteUrl } from "./share";
 
 test("day index 0 is Wordn00 1; the header has only the letter count", () => {
   expect(getShareText(0, ["COT", "CAT"], "CAT")).toBe(
-    "Wordn00 1 · 6 letters\n\n🟩⬜🟩\n🟩🟩🟩",
+    "Wordn00 1 · 6 letters\n\n🟩2 🟨0 🟥1\n🟩3 🟨0 🟥0",
   );
 });
 
@@ -14,7 +14,7 @@ test("large numbers get thousands separators", () => {
 
 test("a loss shows its rows the same way", () => {
   expect(getShareText(2, ["DOG"], "CAT")).toBe(
-    "Wordn00 3 · 3 letters\n\n⬜⬜⬜",
+    "Wordn00 3 · 3 letters\n\n🟩0 🟨0 🟥3",
   );
 });
 
@@ -24,9 +24,9 @@ test("a game off the daily sequence has no number", () => {
   );
 });
 
-test("high contrast uses orange and blue squares", () => {
+test("high contrast uses orange, blue and grey squares", () => {
   expect(getShareText(0, ["COT", "CAT"], "CAT", true)).toBe(
-    "Wordn00 1 · 6 letters\n\n🟧⬜🟧\n🟧🟧🟧",
+    "Wordn00 1 · 6 letters\n\n🟧2 🟦0 ⬜1\n🟧3 🟦0 ⬜0",
   );
 });
 
@@ -39,7 +39,9 @@ test("a single letter is singular", () => {
 test("a link, when given, is the last line after a blank one", () => {
   expect(
     getShareText(0, ["CAT"], "CAT", false, "https://example.com/wordn00/"),
-  ).toBe("Wordn00 1 · 3 letters\n\n🟩🟩🟩\n\nhttps://example.com/wordn00/");
+  ).toBe(
+    "Wordn00 1 · 3 letters\n\n🟩3 🟨0 🟥0\n\nhttps://example.com/wordn00/",
+  );
 });
 
 test("the site link is the origin plus the base path", () => {

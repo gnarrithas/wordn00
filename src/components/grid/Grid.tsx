@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { MIN_GUESSES } from "../../constants/settings";
+import { Marks } from "../../lib/marks";
 import { CompletedRow } from "./CompletedRow";
 import { CurrentRow } from "./CurrentRow";
 import { EmptyRow } from "./EmptyRow";
@@ -17,6 +18,9 @@ type Props = {
   hint?: string;
   // The word's length once Reveal Length has found it: later rows mark it.
   knownLength?: number;
+  // The player's letter marks, and how tapping a letter changes them.
+  marks?: Marks;
+  onMark?: (letter: string) => void;
 };
 
 export const Grid = ({
@@ -29,9 +33,11 @@ export const Grid = ({
   highlightLength = false,
   hint,
   knownLength,
+  marks,
+  onMark,
 }: Props) => {
   const showCurrentRow = !isGameOver && guesses.length < maxGuesses;
-  // The board always starts 6 rows tall; longer words with extra guesses
+  // The board always starts MIN_GUESSES rows tall; longer words with extra guesses
   // grow it one row at a time as those guesses are used.
   const empties = Array.from(
     Array(Math.max(0, MIN_GUESSES - guesses.length - (showCurrentRow ? 1 : 0))),
@@ -70,18 +76,22 @@ export const Grid = ({
     if (!showCurrentRow || currentGuess.length === 0) {
       return;
     }
-    const cell = (row.children[currentGuess.length] ??
-      row.children[currentGuess.length - 1]) as HTMLElement | undefined;
+    // A row is its score boxes, then its letter tiles.
+    const [score, letters] = Array.from(row.children) as HTMLElement[];
+    const cell = (letters?.children[currentGuess.length] ??
+      letters?.children[currentGuess.length - 1]) as HTMLElement | undefined;
     if (!cell) {
       return;
     }
-    // Cells are positioned relative to the scroll container (its offsetParent).
+    // Positions relative to the scroll container (the offsetParent). The
+    // sticky score boxes cover the row's left edge.
     const cellLeft = cell.offsetLeft;
     const cellRight = cellLeft + cell.offsetWidth;
+    const scoreWidth = score?.offsetWidth ?? 0;
     if (cellRight > container.scrollLeft + container.clientWidth) {
       container.scrollLeft = cellRight - container.clientWidth;
-    } else if (cellLeft < container.scrollLeft) {
-      container.scrollLeft = cellLeft;
+    } else if (cellLeft - scoreWidth < container.scrollLeft) {
+      container.scrollLeft = Math.max(0, cellLeft - scoreWidth);
     }
   }, [guesses.length, currentGuess.length, showCurrentRow, isDashedRowNext]);
 
@@ -118,6 +128,8 @@ export const Grid = ({
                 guess !== solution &&
                 guess.length === solution.length
               }
+              marks={marks}
+              onMark={isGameOver ? undefined : onMark}
             />
           ))}
           {showCurrentRow && (

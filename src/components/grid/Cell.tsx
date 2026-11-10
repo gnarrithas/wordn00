@@ -15,6 +15,23 @@ type Props = {
   isDotted?: boolean;
   // Faded letter shown while the box is empty.
   hint?: string;
+  // Makes the tile a button, e.g. to cycle its letter's mark.
+  onClick?: () => void;
+};
+
+export const CELL_SIZES = {
+  md: "w-11 h-11 text-xl sm:w-14 sm:h-14 sm:text-2xl",
+  sm: "w-10 h-10 text-xl",
+};
+
+// Tile colours by status; score boxes use the same palette.
+export const STATUS_CLASSES: Record<CharStatus, string> = {
+  absent:
+    "bg-wordle-absent dark:bg-wordle-night-absent text-white border-wordle-absent dark:border-wordle-night-absent",
+  correct:
+    "bg-wordle-correct dark:bg-wordle-night-correct text-white border-wordle-correct dark:border-wordle-night-correct",
+  present:
+    "bg-wordle-present dark:bg-wordle-night-present text-white border-wordle-present dark:border-wordle-night-present",
 };
 
 export const Cell = ({
@@ -25,13 +42,14 @@ export const Cell = ({
   isDashed = false,
   isDotted = false,
   hint,
+  onClick,
 }: Props) => {
   const isRevealing = revealDelayMs !== undefined;
   const classes = classnames(
     "shrink-0 border-2 flex items-center justify-center mx-0.5 font-bold rounded",
+    CELL_SIZES[size],
+    status && STATUS_CLASSES[status],
     {
-      "w-14 h-14 text-2xl sm:w-16 sm:h-16 sm:text-3xl": size === "md",
-      "w-10 h-10 text-xl": size === "sm",
       "border-dashed": isDashed,
       "border-dotted": isDotted && !isDashed,
       "border-solid": !isDashed && !isDotted,
@@ -39,12 +57,8 @@ export const Cell = ({
         !status && !value,
       "bg-white dark:bg-wordle-night-bg border-wordle-filled dark:border-wordle-night-filled":
         !status && value,
-      "bg-wordle-absent dark:bg-wordle-night-absent text-white border-wordle-absent dark:border-wordle-night-absent":
-        status === "absent",
-      "bg-wordle-correct dark:bg-wordle-night-correct text-white border-wordle-correct dark:border-wordle-night-correct":
-        status === "correct",
-      "bg-wordle-present dark:bg-wordle-night-present text-white border-wordle-present dark:border-wordle-night-present":
-        status === "present",
+      "cursor-pointer select-none touch-manipulation hover:brightness-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500":
+        onClick,
       "cell-reveal": isRevealing,
     },
   );
@@ -54,21 +68,36 @@ export const Cell = ({
         animationDelay: `${revealDelayMs}ms, ${revealDelayMs}ms`,
       }
     : undefined;
+  const content =
+    value ??
+    (hint && (
+      <span className="opacity-25" data-testid="hint">
+        {hint}
+      </span>
+    ));
 
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        className={classes}
+        style={style}
+        aria-label={`${value}${status ? `, marked ${status}` : ""}`}
+        onClick={onClick}
+      >
+        {content}
+      </button>
+    );
+  }
   return (
     <div
       className={classes}
       style={style}
-      // A revealed tile reads as e.g. "C correct".
+      // A coloured tile reads as e.g. "C correct".
       role={status ? "img" : undefined}
       aria-label={status && value ? `${value} ${status}` : undefined}
     >
-      {value ??
-        (hint && (
-          <span className="opacity-25" data-testid="hint">
-            {hint}
-          </span>
-        ))}
+      {content}
     </div>
   );
 };

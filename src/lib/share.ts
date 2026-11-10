@@ -1,22 +1,25 @@
-import { CharStatus, getGuessStatuses } from "./statuses";
+import { getScore, Score } from "./score";
 
-const EMOJI: Record<CharStatus, string> = {
+const EMOJI: Record<keyof Score, string> = {
   correct: "🟩",
   present: "🟨",
-  absent: "⬜",
+  absent: "🟥",
 };
 
-// High contrast mode's colours, as in Wordle.
-const HIGH_CONTRAST_EMOJI: Record<CharStatus, string> = {
+// High contrast mode's colours (see index.css): orange, blue and grey.
+const HIGH_CONTRAST_EMOJI: Record<keyof Score, string> = {
   correct: "🟧",
   present: "🟦",
   absent: "⬜",
 };
 
+const SCORE_ORDER: (keyof Score)[] = ["correct", "present", "absent"];
+
 export const countLetters = (guesses: string[]) =>
   guesses.reduce((total, guess) => total + guess.length, 0);
 
-// Result: "Wordn00 <number> · <letters>", then one emoji row per guess. The
+// Result: "Wordn00 <number> · <letters>", then each guess's score, e.g.
+// "🟩2 🟨1 🟥2". The
 // guess count and limit are left out: the limit gives away the word's length.
 // Numbers start at 1 for day index 0; games off the daily sequence (dev New
 // word) have none.
@@ -28,11 +31,10 @@ export const getShareText = (
   url?: string,
 ) => {
   const emoji = highContrast ? HIGH_CONTRAST_EMOJI : EMOJI;
-  const rows = guesses.map((guess) =>
-    getGuessStatuses(guess, solution)
-      .map((status) => emoji[status])
-      .join(""),
-  );
+  const rows = guesses.map((guess) => {
+    const score = getScore(guess, solution);
+    return SCORE_ORDER.map((key) => `${emoji[key]}${score[key]}`).join(" ");
+  });
   const letters = countLetters(guesses);
   const title =
     day === null ? "Wordn00" : `Wordn00 ${(day + 1).toLocaleString("en-US")}`;

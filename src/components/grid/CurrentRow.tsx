@@ -1,6 +1,7 @@
 import { MAX_WORD_LENGTH, MIN_ROW_CELLS } from "../../constants/settings";
 import { getRowCells, isLengthMarker } from "../../lib/lengthMarkers";
 import { Cell } from "./Cell";
+import { ScoreBoxes } from "./ScoreBoxes";
 
 type Props = {
   guess: string;
@@ -23,23 +24,26 @@ export const CurrentRow = ({ guess, hint = "", knownLength }: Props) => {
   const emptyCells = Array.from(Array(emptyCount));
 
   return (
-    <div className="flex mb-1" role="group" aria-label="Current guess">
-      {splitGuess.map((letter, i) => (
-        <Cell key={i} value={letter} />
-      ))}
-      {emptyCells.map((_, i) => {
-        const index = splitGuess.length + i;
-        const isDotted = isLengthMarker(index, knownLength);
-        return (
-          <Cell
-            key={`empty-${i}`}
-            // Dotted length markers take precedence over the grow hint.
-            isDashed={!isDotted && splitGuess.length >= MIN_ROW_CELLS}
-            isDotted={isDotted}
-            hint={hint[index]}
-          />
-        );
-      })}
+    <div className="flex w-max mb-1">
+      <ScoreBoxes />
+      <div className="flex" role="group" aria-label="Current guess">
+        {splitGuess.map((letter, i) => (
+          <Cell key={i} value={letter} />
+        ))}
+        {emptyCells.map((_, i) => {
+          const index = splitGuess.length + i;
+          const isDotted = isLengthMarker(index, knownLength);
+          return (
+            <Cell
+              key={`empty-${i}`}
+              // Dotted length markers take precedence over the grow hint.
+              isDashed={!isDotted && splitGuess.length >= MIN_ROW_CELLS}
+              isDotted={isDotted}
+              hint={hint[index]}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 };

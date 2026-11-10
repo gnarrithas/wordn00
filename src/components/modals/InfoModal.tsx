@@ -1,4 +1,4 @@
-import { Fragment } from "react";
+import { Fragment, ReactNode } from "react";
 import { Dialog, Transition } from "@headlessui/react";
 import { Cell } from "../grid/Cell";
 import {
@@ -6,13 +6,38 @@ import {
   MIN_GUESSES,
   MIN_WORD_LENGTH,
 } from "../../constants/settings";
-import { ordinal } from "../../lib/ordinal";
+import { Marks } from "../../lib/marks";
+import { getScore } from "../../lib/score";
+import { ScoreBoxes } from "../grid/ScoreBoxes";
 import { getSolutionLengthRange } from "../../lib/words";
 
 type Props = {
   isOpen: boolean;
   handleClose: () => void;
 };
+
+type ExampleProps = {
+  guess: string;
+  solution: string;
+  marks?: Marks;
+  children: ReactNode;
+};
+
+const Example = ({ guess, solution, marks = {}, children }: ExampleProps) => (
+  <div>
+    <div className="flex justify-center mb-1">
+      <ScoreBoxes
+        size="sm"
+        isSticky={false}
+        score={getScore(guess, solution)}
+      />
+      {guess.split("").map((letter, i) => (
+        <Cell key={i} size="sm" value={letter} status={marks[letter]} />
+      ))}
+    </div>
+    <p>{children}</p>
+  </div>
+);
 
 export const InfoModal = ({ isOpen, handleClose }: Props) => {
   const { shortest, longest } = getSolutionLengthRange();
@@ -63,68 +88,46 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                   </Dialog.Title>
                   <div className="mt-2 space-y-3 text-sm text-gray-500 dark:text-gray-300">
                     <p>
-                      Guess the hidden word. It has between {MIN_WORD_LENGTH} and {MAX_WORD_LENGTH} letters.
+                      Guess the hidden word. It has between {shortest} and{" "}
+                      {longest} letters; guesses can have {MIN_WORD_LENGTH} to{" "}
+                      {MAX_WORD_LENGTH}.
                     </p>
                     <p>
-                      The number of tries you get is one more than the number of letters in the word, but at least 6.
+                      You get three more tries than the word has letters, but at
+                      least {MIN_GUESSES}.
+                    </p>
+                    <p>
+                      Each guess gets three numbers, shown before it: letters in
+                      the right spot (green), letters in the word but in another
+                      spot (yellow), and letters not in the word (red). They
+                      never say which letters they are.
                     </p>
 
                     <h4 className="pt-1 font-medium text-gray-900 dark:text-white">
-                        Examples
+                      Examples
                     </h4>
 
-                    <div>
-                      <div className="flex justify-center mb-1">
-                        <Cell size="sm" value="W" status="correct" />
-                        <Cell size="sm" value="E" />
-                        <Cell size="sm" value="A" />
-                        <Cell size="sm" value="R" />
-                        <Cell size="sm" value="Y" />
-                      </div>
-                      <p>
-                        <strong>W</strong> is in the word and in the correct
-                        spot.
-                      </p>
-                    </div>
+                    <Example guess="WEARY" solution="TIGER">
+                      With the word <strong>TIGER</strong>: no letter is in the
+                      right spot, two (<strong>E</strong> and <strong>R</strong>
+                      ) are elsewhere, three are not in the word.
+                    </Example>
 
-                    <div>
-                      <div className="flex justify-center mb-1">
-                        <Cell size="sm" value="P" />
-                        <Cell size="sm" value="I" status="present" />
-                        <Cell size="sm" value="L" />
-                        <Cell size="sm" value="O" />
-                        <Cell size="sm" value="T" />
-                      </div>
-                      <p>
-                        <strong>I</strong> is in the word but in the wrong spot.
-                      </p>
-                    </div>
+                    <Example guess="CAT" solution="CATALOG">
+                      All letters in place, but not a win: the word could be{" "}
+                      <strong>CATALOG</strong>. Spots count from the left, so
+                      try a longer guess to find out how it continues.
+                    </Example>
 
-                    <div>
-                      <div className="flex justify-center mb-1">
-                        <Cell size="sm" value="V" />
-                        <Cell size="sm" value="A" />
-                        <Cell size="sm" value="G" />
-                        <Cell size="sm" value="U" status="absent" />
-                        <Cell size="sm" value="E" />
-                      </div>
-                      <p>
-                        <strong>U</strong> is not in the word in any spot.
-                      </p>
-                    </div>
-
-                    <div>
-                      <div className="flex justify-center mb-1">
-                        <Cell size="sm" value="C" status="correct" />
-                        <Cell size="sm" value="A" status="correct" />
-                        <Cell size="sm" value="T" status="correct" />
-                      </div>
-                      <p>
-                        All green, but not a win: the word could be{" "}
-                        <strong>CATALOG</strong>. Try a longer guess to find out
-                        how it continues.
-                      </p>
-                    </div>
+                    <Example
+                      guess="TRAIN"
+                      solution="TIGER"
+                      marks={{ T: "correct", R: "present", A: "absent" }}
+                    >
+                      Tap a letter on the board to note what you have worked
+                      out: it cycles through red, yellow, green and back to
+                      blank, everywhere on the board and keyboard.
+                    </Example>
                   </div>
                 </div>
               </div>

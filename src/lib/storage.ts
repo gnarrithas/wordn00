@@ -1,3 +1,5 @@
+import { isMarks, Marks } from "./marks";
+
 // Game progress survives reloads. Storage can be unavailable (private mode,
 // quota, disabled cookies); the game then simply starts fresh each visit.
 export type SavedGame = {
@@ -7,6 +9,8 @@ export type SavedGame = {
   isAnswerRevealed: boolean;
   // Daily sequence index, or null for a New word game.
   day: number | null;
+  // The player's own letter marks (see marks.ts).
+  marks: Marks;
 };
 
 // The daily game and a New word game are kept apart, so playing a random
@@ -27,7 +31,8 @@ const isSavedGame = (value: unknown): value is SavedGame => {
     typeof game.isGameWon === "boolean" &&
     typeof game.isAnswerRevealed === "boolean" &&
     (game.day === null ||
-      (typeof game.day === "number" && Number.isInteger(game.day)))
+      (typeof game.day === "number" && Number.isInteger(game.day))) &&
+    (game.marks === undefined || isMarks(game.marks))
   );
 };
 
@@ -42,7 +47,7 @@ const loadFrom = (key: string): SavedGame | null => {
       console.warn("Ignoring malformed saved game");
       return null;
     }
-    return parsed;
+    return { ...parsed, marks: parsed.marks ?? {} };
   } catch (err) {
     console.warn("Could not load saved game", err);
     return null;

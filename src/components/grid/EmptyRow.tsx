@@ -1,5 +1,6 @@
 import { getRowCells, isLengthMarker } from "../../lib/lengthMarkers";
 import { Cell } from "./Cell";
+import { ScoreBoxes } from "./ScoreBoxes";
 
 type Props = {
   // Dashed borders for the extra row that hints the board can grow.
@@ -12,14 +13,17 @@ export const EmptyRow = ({ isDashed = false, knownLength }: Props) => {
   const emptyCells = Array.from(Array(getRowCells(knownLength)));
 
   return (
-    <div className="flex mb-1">
-      {emptyCells.map((_, i) => (
-        <Cell
-          key={i}
-          isDashed={isDashed}
-          isDotted={isLengthMarker(i, knownLength)}
-        />
-      ))}
+    <div className="flex w-max mb-1">
+      <ScoreBoxes isDashed={isDashed} />
+      <div className="flex">
+        {emptyCells.map((_, i) => (
+          <Cell
+            key={i}
+            isDashed={isDashed}
+            isDotted={isLengthMarker(i, knownLength)}
+          />
+        ))}
+      </div>
     </div>
   );
 };
