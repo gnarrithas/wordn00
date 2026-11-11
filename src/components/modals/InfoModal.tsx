@@ -93,19 +93,15 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                   </Dialog.Title>
                   <div className="mt-2 space-y-3 text-sm font-normal text-ui-text">
                     <p>
-                      Guess the hidden word. It has between {shortest} and{" "}
-                      {longest} letters; guesses can have {MIN_WORD_LENGTH} to{" "}
-                      {MAX_WORD_LENGTH}.
+                      Guess the hidden word. It has between {MIN_WORD_LENGTH} and {MAX_WORD_LENGTH} letters
                     </p>
                     <p>
-                      You get twice as many tries as the word has letters, minus
-                      two, but at least {MIN_GUESSES}.
+                      You get twice as many tries as the word has letters, but at least {MIN_GUESSES}.
                     </p>
                     <p>
                       Each guess gets three numbers, shown before it: letters in
                       the right spot (green), letters in the word but in another
-                      spot (yellow), and letters not in the word (red). They
-                      never say which letters they are.
+                      spot (yellow), and letters not in the word (red).
                     </p>
 
                     <h4 className="pt-1 font-bold text-ui-text">Examples</h4>
