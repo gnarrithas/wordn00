@@ -22,8 +22,9 @@ type Props = {
   onRedo: () => void;
   canUndo?: boolean;
   canRedo?: boolean;
-  // The player's letter marks colour the keys.
+  // The player's tile marks colour the keys, read off the guesses.
   marks: Marks;
+  guesses: string[];
   // Letters already guessed, dimmed unless marked.
   usedLetters?: Set<string>;
   // Letters the level keeps out of the answer: greyed like used letters,
@@ -87,6 +88,7 @@ export const Keyboard = ({
   canUndo = false,
   canRedo = false,
   marks: charStatuses,
+  guesses,
   usedLetters = new Set(),
   excludedLetters = new Set(),
   isInputDisabled = false,
@@ -269,7 +271,7 @@ export const Keyboard = ({
       key={letter}
       value={letter as KeyValue}
       onClick={onClick}
-      status={getKeyMark(charStatuses, letter)}
+      status={getKeyMark(charStatuses, guesses, letter)}
       isUsed={usedLetters.has(letter)}
       isExcluded={excludedLetters.has(letter)}
     />

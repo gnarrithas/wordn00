@@ -17,54 +17,63 @@ test("marks cycle absent, present, correct, then clear", () => {
   expect(nextMark("correct")).toBeUndefined();
 });
 
-test("red and yellow mark every copy of a letter", () => {
-  let marks = cycleMark({}, "C", 0);
-  expect(getMark(marks, "C", 3)).toBe("absent");
-  marks = cycleMark(marks, "C", 0);
-  expect(getMark(marks, "C", 3)).toBe("present");
-  expect(getKeyMark(marks, "C")).toBe("present");
+test("a tap colours only that tile", () => {
+  // METH / SILHOUETTE: one hit each; the player picks which E counts.
+  let marks = cycleMark({}, 1, 6);
+  marks = cycleMark(marks, 1, 6);
+  expect(getMark(marks, 1, 6)).toBe("present");
+  expect(getMark(marks, 1, 9)).toBeUndefined();
+  expect(getMark(marks, 0, 1)).toBeUndefined();
+  marks = cycleMark(cycleMark(marks, 1, 6), 1, 6);
+  expect(marks).toEqual({});
 });
 
-test("green marks one spot only, leaving the other copies yellow", () => {
-  let marks: Marks = { C: "present" };
-  marks = cycleMark(marks, "C", 0);
-  expect(getMark(marks, "C", 0)).toBe("correct");
-  expect(getMark(marks, "C", 2)).toBe("present");
-  expect(getKeyMark(marks, "C")).toBe("correct");
-  // A yellow copy elsewhere turns green on its own.
-  marks = cycleMark(marks, "C", 2);
-  expect(getMark(marks, "C", 0)).toBe("correct");
-  expect(getMark(marks, "C", 2)).toBe("correct");
-  expect(getMark(marks, "C", 1)).toBe("present");
-  // Back to blank clears the letter everywhere, other green spots too.
-  marks = cycleMark({ ...marks, D: "absent" }, "C", 0);
-  expect(marks).toEqual({ D: "absent" });
-});
-
-test("cycleMark leaves other letters alone", () => {
-  expect(cycleMark({ A: "absent" }, "B", 1)).toEqual({
-    A: "absent",
-    B: "absent",
+test("cycleMark leaves other tiles alone", () => {
+  expect(cycleMark({ "0-0": "absent" }, 0, 1)).toEqual({
+    "0-0": "absent",
+    "0-1": "absent",
   });
 });
 
-test("isMarks accepts letters and green spots with a known status", () => {
+test("a key shows the strongest mark among its letter's tiles", () => {
+  const guesses = ["METH", "SILHOUETTE"];
+  expect(getKeyMark({}, guesses, "E")).toBeUndefined();
+  expect(getKeyMark({ "1-9": "absent" }, guesses, "E")).toBe("absent");
+  const marks: Marks = { "1-9": "absent", "0-1": "present" };
+  expect(getKeyMark(marks, guesses, "E")).toBe("present");
+  expect(getKeyMark({ ...marks, "1-6": "correct" }, guesses, "E")).toBe(
+    "correct",
+  );
+  expect(getKeyMark(marks, guesses, "M")).toBeUndefined();
+});
+
+test("isMarks accepts tile keys and old letter keys", () => {
   expect(isMarks({})).toBe(true);
+  expect(isMarks({ "0-3": "present", "12-10": "absent" })).toBe(true);
   expect(isMarks({ A: "present", A3: "correct", B12: "correct" })).toBe(true);
   expect(isMarks({ A3: "present" })).toBe(false);
-  expect(isMarks({ A123: "correct" })).toBe(false);
+  expect(isMarks({ "0-123": "absent" })).toBe(false);
   expect(isMarks({ a: "present" })).toBe(false);
-  expect(isMarks({ A: "green" })).toBe(false);
+  expect(isMarks({ "0-0": "green" })).toBe(false);
   expect(isMarks([])).toBe(false);
   expect(isMarks(null)).toBe(false);
 });
 
-test("upgradeMarks turns old whole-letter greens yellow", () => {
-  expect(upgradeMarks({ A: "correct", B: "absent", C2: "correct" })).toEqual({
-    A: "present",
-    B: "absent",
-    C2: "correct",
+test("upgradeMarks spreads old letter marks onto their tiles", () => {
+  expect(
+    upgradeMarks(
+      { C: "present", C0: "correct", A: "correct", T: "absent" },
+      ["CAT", "ARC"],
+    ),
+  ).toEqual({
+    "0-0": "correct",
+    "0-1": "present",
+    "0-2": "absent",
+    "1-0": "present",
+    "1-2": "present",
   });
+  const marks = { "0-1": "absent" as const };
+  expect(upgradeMarks(marks, ["CAT"])).toEqual(marks);
 });
 
 test("getForcedAbsent takes every letter of the all-red guesses only", () => {
@@ -74,13 +83,19 @@ test("getForcedAbsent takes every letter of the all-red guesses only", () => {
   expect(getForcedAbsent([], "CAT").size).toBe(0);
 });
 
-test("withForcedAbsent marks forced letters red over the player's marks", () => {
+test("withForcedAbsent marks every tile of a forced letter red", () => {
   expect(
     withForcedAbsent(
-      { D: "present", D1: "correct", C: "present" },
+      { "0-0": "present", "1-1": "correct" },
+      ["DOG", "CAD"],
       new Set(["D", "O"]),
     ),
-  ).toEqual({ D: "absent", O: "absent", C: "present" });
-  const marks = { C: "present" as const };
-  expect(withForcedAbsent(marks, new Set())).toBe(marks);
+  ).toEqual({
+    "0-0": "absent",
+    "0-1": "absent",
+    "1-1": "correct",
+    "1-2": "absent",
+  });
+  const marks = { "0-0": "present" as const };
+  expect(withForcedAbsent(marks, ["CAT"], new Set())).toBe(marks);
 });

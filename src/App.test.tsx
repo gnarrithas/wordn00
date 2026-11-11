@@ -899,7 +899,7 @@ test("Undo and Redo step through mark changes, keys and shortcuts", async () => 
   expect(inputRow()).not.toHaveTextContent("Z");
 });
 
-test("green marks only that spot; the letter stays yellow elsewhere", async () => {
+test("marking a tile leaves the letter's other tiles alone", async () => {
   await renderGame();
   submit("COT");
   submit("ARC");
@@ -910,8 +910,12 @@ test("green marks only that spot; the letter stays yellow elsewhere", async () =
     );
   mouseClick(c("COT"));
   mouseClick(c("COT"));
-  expect(c("ARC")).toHaveAccessibleName("C, marked present");
-  mouseClick(c("COT"));
-  expect(c("COT")).toHaveAccessibleName("C, marked correct");
-  expect(c("ARC")).toHaveAccessibleName("C, marked present");
+  expect(c("COT")).toHaveAccessibleName("C, marked present");
+  expect(c("ARC")).toHaveAccessibleName("C");
+  mouseClick(c("ARC"));
+  expect(c("ARC")).toHaveAccessibleName("C, marked absent");
+  // The key shows the strongest of the two.
+  expect(
+    screen.getByRole("button", { name: "C, present" }),
+  ).toBeInTheDocument();
 });

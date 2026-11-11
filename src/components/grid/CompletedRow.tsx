@@ -17,10 +17,12 @@ type Props = {
   isFlipping?: boolean;
   // Reveal Length: the guess has the answer's length.
   isLengthMatch?: boolean;
-  // The player's letter marks colour the tiles.
+  // This guess's index on the board, which its tile marks are keyed by.
+  row?: number;
+  // The player's tile marks colour the tiles.
   marks?: Marks;
   // Tapping a tile cycles its mark; omit once the game is over.
-  onMark?: (letter: string, position: number) => void;
+  onMark?: (row: number, position: number) => void;
   // Letters that cannot be re-marked (see getForcedAbsent).
   lockedLetters?: Set<string>;
 };
@@ -32,6 +34,7 @@ export const CompletedRow = ({
   isRevealed = false,
   isFlipping = false,
   isLengthMatch = false,
+  row = 0,
   marks = {},
   onMark,
   lockedLetters,
@@ -72,13 +75,13 @@ export const CompletedRow = ({
           <Cell
             key={i}
             value={letter}
-            status={statuses ? statuses[i] : getMark(marks, letter, i)}
+            status={statuses ? statuses[i] : getMark(marks, row, i)}
             // The whole board flips at once, from the marks to the answer.
             revealDelayMs={isFlipping ? 0 : undefined}
-            fromStatus={getMark(marks, letter, i)}
+            fromStatus={getMark(marks, row, i)}
             onClick={
               onMark && !lockedLetters?.has(letter)
-                ? () => onMark(letter, i)
+                ? () => onMark(row, i)
                 : undefined
             }
           />

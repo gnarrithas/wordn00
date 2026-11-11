@@ -297,8 +297,8 @@ function Game() {
     [guesses, revealedCount, solution],
   );
   const shownMarks = useMemo(
-    () => withForcedAbsent(marks, forcedAbsent),
-    [marks, forcedAbsent],
+    () => withForcedAbsent(marks, guesses, forcedAbsent),
+    [marks, guesses, forcedAbsent],
   );
 
   useEffect(() => {
@@ -413,14 +413,12 @@ function Game() {
     }
   };
 
-  const onMark = (letter: string, position: number) => {
-    if (isGameOver || forcedAbsent.has(letter)) {
+  const onMark = (row: number, position: number) => {
+    if (isGameOver || forcedAbsent.has(guesses[row]?.[position] ?? "")) {
       return;
     }
     notePlayerAction();
-    setMarksHistory((h) =>
-      recordMarks(h, cycleMark(h.present, letter, position)),
-    );
+    setMarksHistory((h) => recordMarks(h, cycleMark(h.present, row, position)));
   };
 
   const onHint = () => {
@@ -639,6 +637,7 @@ function Game() {
           canUndo={!isGameOver && canUndo(marksHistory)}
           canRedo={!isGameOver && canRedo(marksHistory)}
           marks={shownMarks}
+          guesses={guesses}
           usedLetters={usedLetters}
           excludedLetters={getExcludedLetters(level)}
           isPhysicalKeyboardIgnored={settings.onscreenKeyboardOnly}

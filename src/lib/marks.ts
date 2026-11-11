@@ -2,19 +2,16 @@ import { CharStatus } from "./statuses";
 import { getScore } from "./score";
 
 // The score never says which letters matched, so players note their own
-// deductions by tapping letters on the board. Red and yellow are about a
-// letter (it is not in the word / it is somewhere in it), so they colour
-// every copy of it on the board and its keyboard key. Green is about a letter
-// in one spot, so it only colours that letter at that position, in any row;
-// the other copies stay yellow.
+// deductions by tapping letters on the board. Each tap colours only that
+// tile: a letter can occur more than once, and which copy matched is up to
+// the player (with one hit in SILHOUETTE, only one of its Es is yellow).
 //
-// Stored flat, so saved games stay plain JSON: a letter key ("C") holds its
-// red or yellow mark, and a letter-and-position key ("C0", positions from the
-// left starting at 0) marks it green there.
+// Stored flat, so saved games stay plain JSON: "row-position" keys (both
+// from 0, rows from the top, positions from the left) hold the tile's mark.
 export type Marks = Record<string, CharStatus>;
 
-const greenKey = (letter: string, position: number) => `${letter}${position}`;
-const GREEN_KEY = /^([A-Z])\d{1,2}$/;
+const tileKey = (row: number, position: number) => `${row}-${position}`;
+const TILE_KEY = /^(\d{1,2})-(\d{1,2})$/;
 
 const CYCLE: (CharStatus | undefined)[] = [
   undefined,
@@ -26,73 +23,94 @@ const CYCLE: (CharStatus | undefined)[] = [
 export const nextMark = (current?: CharStatus) =>
   CYCLE[(CYCLE.indexOf(current) + 1) % CYCLE.length];
 
-// The colour of `letter` at `position` on the board.
+// The colour of the tile at `position` in guess `row`.
 export const getMark = (
   marks: Marks,
-  letter: string,
+  row: number,
   position: number,
-): CharStatus | undefined =>
-  marks[greenKey(letter, position)] === "correct" ? "correct" : marks[letter];
+): CharStatus | undefined => marks[tileKey(row, position)];
 
-// The colour of a keyboard key: green once the letter is green anywhere.
+// Strongest first: what a keyboard key shows when its tiles disagree.
+const STRENGTH: CharStatus[] = ["correct", "present", "absent"];
+
+// The colour of a keyboard key: the strongest mark on any tile of `letter`.
 export const getKeyMark = (
   marks: Marks,
+  guesses: string[],
   letter: string,
-): CharStatus | undefined =>
-  Object.keys(marks).some((key) => GREEN_KEY.exec(key)?.[1] === letter)
-    ? "correct"
-    : marks[letter];
+): CharStatus | undefined => {
+  const found = new Set<CharStatus>();
+  guesses.forEach((guess, row) =>
+    guess.split("").forEach((l, position) => {
+      const mark = l === letter ? getMark(marks, row, position) : undefined;
+      if (mark) {
+        found.add(mark);
+      }
+    }),
+  );
+  return STRENGTH.find((status) => found.has(status));
+};
 
-const without = (marks: Marks, ...keys: string[]): Marks => {
+// Tapping a tile moves it to its next colour; no other tile changes.
+export const cycleMark = (
+  marks: Marks,
+  row: number,
+  position: number,
+): Marks => {
+  const key = tileKey(row, position);
+  const next = nextMark(marks[key]);
   const result = { ...marks };
-  keys.forEach((key) => delete result[key]);
+  if (next === undefined) {
+    delete result[key];
+  } else {
+    result[key] = next;
+  }
   return result;
 };
 
-// Tapping `letter` at `position` moves that tile to its next colour: red and
-// yellow change every copy of the letter; green only this spot, the others
-// staying yellow. From green, the letter goes back to blank everywhere,
-// green spots included.
-export const cycleMark = (
-  marks: Marks,
-  letter: string,
-  position: number,
-): Marks => {
-  const next = nextMark(getMark(marks, letter, position));
-  if (next === "correct") {
-    return {
-      ...marks,
-      [letter]: "present",
-      [greenKey(letter, position)]: next,
-    };
-  }
-  if (next === undefined) {
-    return without(
-      marks,
-      ...Object.keys(marks).filter((key) => key[0] === letter),
-    );
-  }
-  return { ...marks, [letter]: next };
-};
+// Saved games from before marks were per tile keyed them by letter ("C",
+// red or yellow on every copy) or by letter and position ("C0", green there
+// in every row).
+const LEGACY_LETTER_KEY = /^[A-Z]$/;
+const LEGACY_GREEN_KEY = /^([A-Z])(\d{1,2})$/;
 
 export const isMarks = (value: unknown): value is Marks =>
   typeof value === "object" &&
   value !== null &&
   !Array.isArray(value) &&
   Object.entries(value).every(([key, status]) =>
-    /^[A-Z]$/.test(key)
+    TILE_KEY.test(key) || LEGACY_LETTER_KEY.test(key)
       ? CYCLE.includes(status) && status !== undefined
-      : GREEN_KEY.test(key) && status === "correct",
+      : LEGACY_GREEN_KEY.test(key) && status === "correct",
   );
 
-// Saved games from before green was per position marked whole letters
-// green; those letters become yellow, which is all that is known.
-export const upgradeMarks = (marks: Marks): Marks => {
+// Spreads old letter marks onto the tiles they coloured. Whole-letter greens
+// (from before green was per position) become yellow, all that is known.
+export const upgradeMarks = (marks: Marks, guesses: string[]): Marks => {
   const result: Marks = {};
   Object.entries(marks).forEach(([key, status]) => {
-    result[key] =
-      /^[A-Z]$/.test(key) && status === "correct" ? "present" : status;
+    if (TILE_KEY.test(key)) {
+      result[key] = status;
+    }
   });
+  guesses.forEach((guess, row) =>
+    guess.split("").forEach((letter, position) => {
+      const key = tileKey(row, position);
+      if (key in result) {
+        return;
+      }
+      const letterMark = marks[letter];
+      const mark =
+        marks[`${letter}${position}`] === "correct"
+          ? "correct"
+          : letterMark === "correct"
+            ? "present"
+            : letterMark;
+      if (mark) {
+        result[key] = mark;
+      }
+    }),
+  );
   return result;
 };
 
@@ -113,18 +131,22 @@ export const getForcedAbsent = (
   return letters;
 };
 
-// The player's marks with the forced red letters on top, green spots
-// included.
-export const withForcedAbsent = (marks: Marks, forced: Set<string>): Marks => {
+// The player's marks with every tile of a forced red letter red on top.
+export const withForcedAbsent = (
+  marks: Marks,
+  guesses: string[],
+  forced: Set<string>,
+): Marks => {
   if (forced.size === 0) {
     return marks;
   }
-  const result = without(
-    marks,
-    ...Object.keys(marks).filter((key) => forced.has(key[0])),
+  const result = { ...marks };
+  guesses.forEach((guess, row) =>
+    guess.split("").forEach((letter, position) => {
+      if (forced.has(letter)) {
+        result[tileKey(row, position)] = "absent";
+      }
+    }),
   );
-  forced.forEach((letter) => {
-    result[letter] = "absent";
-  });
   return result;
 };

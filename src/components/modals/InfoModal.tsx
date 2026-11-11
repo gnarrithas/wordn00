@@ -36,7 +36,7 @@ const Example = ({ guess, solution, marks = {}, children }: ExampleProps) => (
           key={i}
           size="sm"
           value={letter}
-          status={getMark(marks, letter, i)}
+          status={getMark(marks, 0, i)}
         />
       ))}
     </div>
@@ -122,17 +122,17 @@ export const InfoModal = ({ isOpen, handleClose }: Props) => {
                       guess="TRAIN"
                       solution="TIGER"
                       marks={{
-                        T: "present",
-                        T0: "correct",
-                        R: "present",
-                        A: "absent",
+                        "0-0": "correct",
+                        "0-1": "present",
+                        "0-2": "absent",
                       }}
                     >
                       Tap a letter on the board to note what you have worked
                       out: it cycles through red, yellow, green and back to
-                      blank. Red, yellow and blank apply to the letter
-                      everywhere on the board and keyboard; green only to that
-                      spot. <strong>Clear</strong> removes every mark.
+                      blank. Only the tapped tile changes, so with repeated
+                      letters you choose which copy counts; a key shows the
+                      strongest colour among its letter's tiles.{" "}
+                      <strong>Clear</strong> removes every mark.
                     </Example>
 
                     <p>

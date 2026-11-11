@@ -10,7 +10,7 @@ export type SavedGame = {
   isAnswerRevealed: boolean;
   // Daily sequence index, or null for a New word game.
   day: number | null;
-  // The player's own letter marks (see marks.ts).
+  // The player's own tile marks (see marks.ts).
   marks: Marks;
 };
 
@@ -51,7 +51,10 @@ const loadFrom = (key: string): SavedGame | null => {
       console.warn("Ignoring malformed saved game");
       return null;
     }
-    return { ...parsed, marks: upgradeMarks(parsed.marks ?? {}) };
+    return {
+      ...parsed,
+      marks: upgradeMarks(parsed.marks ?? {}, parsed.guesses),
+    };
   } catch (err) {
     console.warn("Could not load saved game", err);
     return null;
